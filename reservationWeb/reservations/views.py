@@ -30,6 +30,34 @@ def add_reservation(request):
     
     return render(request, 'add_reservation.html', {'form': form})
 
+@login_required
+def edit_reservation(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'You do not have permission to edit reservations.'}, status=403)
+    
+    if request.method == 'POST':
+        form = ReservationForm(request.POST, instance=reservation)
+        if form.is_valid():
+            form.save()
+            return redirect('index')
+    else:
+        form = ReservationForm(instance=reservation)
+    
+    return render(request, 'edit_reservation.html', {'form': form, 'reservation': reservation})
+
+@login_required
+def delete_reservation(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'You do not have permission to delete reservations.'}, status=403)
+    
+    if request.method == 'POST':
+        reservation.delete()
+        return redirect('index')
+    
+    return render(request, 'delete_reservation.html', {'reservation': reservation})
+
 def create_client_reservation(request, reservation_id):
     reservation = get_object_or_404(Reservation, id=reservation_id)
     if request.method == 'POST':
@@ -47,19 +75,35 @@ def create_client_reservation(request, reservation_id):
     
     return render(request, 'create_client_reservation.html', {'form': form, 'reservation': reservation})
 
+@login_required
 def municipality_detail(request, municipality_id):
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'You do not have permission to view this information.'}, status=403)
+    
     reservations = Reservation.objects.filter(municipality=municipality_id)
     data = {
         'reservations': list(reservations.values('date', 'municipality'))
     }
     return JsonResponse(data)
 
+@login_required
 def date_detail(request, reservation_date):
+    if not request.user.is_superuser:
+        return JsonResponse({'error': 'You do not have permission to view this information.'}, status=403)
+    
     reservations = Reservation.objects.filter(date=reservation_date)
-    return render(request, 'date_detail.html', {
-        'date': reservation_date,
-        'reservations': reservations,
-    })
+    reservation_details = []
+    for reservation in reservations:
+        clients = ClientReservation.objects.filter(reservation=reservation)
+        client_details = list(clients.values('client_name', 'client_last_name', 'address', 'phone_number', 'trees_count', 'additional_comments', 'trees_under_4m', 'selected_time'))
+        reservation_details.append({
+            'id': reservation.id,
+            'date': reservation.date,
+            'municipality': reservation.get_municipality_display(),
+            'clients': client_details,
+            'is_superuser': request.user.is_superuser
+        })
+    return JsonResponse({'reservations': reservation_details})
 
 class CustomLoginView(LoginView):
     template_name = 'login.html'

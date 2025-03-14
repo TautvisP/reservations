@@ -11,6 +11,12 @@
             max-width: 900px;
             margin: 40px auto;
         }
+        .reservation-details {
+            margin-top: 20px;
+        }
+        .reservation-actions {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -26,10 +32,11 @@
         <p><a href="{% url 'login' %}">Login</a></p>
     {% endif %}
     <div id="calendar"></div>
+    <div id="reservation-details" class="reservation-details"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script src="{% static 'calendar.js' %}"></script>
+    <script src="{% static 'js/calendar.js' %}"></script>
 </body>
 </html>
