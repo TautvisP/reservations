@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,40 +16,20 @@
 <body>
     <h1>Reservation Calendar</h1>
     {% if user.is_authenticated %}
-        <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
+        <p>Welcome, {{ user.username }}!</p>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Logout</button>
+        </form>
         <p><a href="{% url 'add_reservation' %}">Add Reservation</a></p>
     {% else %}
         <p><a href="{% url 'login' %}">Login</a></p>
     {% endif %}
-    <p><a href="{% url 'user_reservation' %}">Create Reservation</a></p>
     <div id="calendar"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Initialize the calendar
-            $('#calendar').fullCalendar({
-                events: function(start, end, timezone, callback) {
-                    $.ajax({
-                        url: '/reservations/',
-                        success: function(data) {
-                            var events = data.reservations.map(function(reservation) {
-                                return {
-                                    title: reservation.municipality__name,
-                                    start: reservation.date
-                                };
-                            });
-                            callback(events);
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Error fetching reservations:', error);
-                        }
-                    });
-                }
-            });
-        });
-    </script>
+    <script src="{% static 'calendar.js' %}"></script>
 </body>
 </html>

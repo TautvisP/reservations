@@ -8,7 +8,7 @@ urlpatterns = [
     path('date/<str:reservation_date>/', views.date_detail, name='date_detail'),
     path('reservations/', views.reservations, name='reservations'),
     path('add_reservation/', views.add_reservation, name='add_reservation'),
-    path('user_reservation/', views.user_reservation, name='user_reservation'),
+    path('create_client_reservation/<int:reservation_id>/', views.create_client_reservation, name='create_client_reservation'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
 ]

@@ -1,26 +1,40 @@
 from django import forms
-from .models import Reservation, Municipality, County
+from .models import Reservation, Municipality, ClientReservation
 
 class ReservationForm(forms.ModelForm):
+    available_times = forms.MultipleChoiceField(
+        choices=[(f"{hour:02d}:00", f"{hour:02d}:00") for hour in range(7, 23)],
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        label='Available Times'
+    )
+
     class Meta:
         model = Reservation
-        fields = ['municipality', 'date']
+        fields = ['municipality', 'date', 'available_times']
+        widgets = {
+            'date': forms.DateInput(attrs={'type': 'date'}),
+        }
 
-class UserReservationForm(forms.ModelForm):
-    county = forms.ModelChoiceField(queryset=County.objects.all(), required=True, label='Apskritis')
-    municipality = forms.ModelChoiceField(queryset=Municipality.objects.none(), required=True, label='Savivaldybė')
+class ClientReservationForm(forms.ModelForm):
+    selected_time = forms.ChoiceField(
+        choices=[],
+        required=True,
+        label='Select Time'
+    )
 
     class Meta:
-        model = Reservation
-        fields = ['county', 'municipality', 'date']
+        model = ClientReservation
+        fields = [
+            'client_name', 'client_last_name', 'address', 'phone_number',
+            'trees_count', 'additional_comments', 'trees_under_4m', 'selected_time'
+        ]
+        widgets = {
+            'trees_under_4m': forms.CheckboxInput(),
+        }
 
     def __init__(self, *args, **kwargs):
+        reservation = kwargs.pop('reservation', None)
         super().__init__(*args, **kwargs)
-        if 'county' in self.data:
-            try:
-                county_id = int(self.data.get('county'))
-                self.fields['municipality'].queryset = Municipality.objects.filter(county_id=county_id).order_by('name')
-            except (ValueError, TypeError):
-                pass  # invalid input from the client; ignore and fallback to empty Municipality queryset
-        elif self.instance.pk:
-            self.fields['municipality'].queryset = self.instance.county.municipality_set.order_by('name')
+        if reservation:
+            self.fields['selected_time'].choices = [(time, time) for time in reservation.available_times]

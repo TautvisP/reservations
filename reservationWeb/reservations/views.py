@@ -1,7 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Municipality, Reservation, County
-from .forms import ReservationForm, UserReservationForm
+from .models import Reservation, ClientReservation
+from .forms import ReservationForm, ClientReservationForm
 from django.http import JsonResponse
 from django.contrib.auth.views import LoginView, LogoutView
 
@@ -11,7 +11,7 @@ def index(request):
 def reservations(request):
     reservations = Reservation.objects.all()
     data = {
-        'reservations': list(reservations.values('date', 'municipality__name'))
+        'reservations': list(reservations.values('id', 'date', 'municipality'))
     }
     return JsonResponse(data)
 
@@ -30,26 +30,27 @@ def add_reservation(request):
     
     return render(request, 'add_reservation.html', {'form': form})
 
-def user_reservation(request):
+def create_client_reservation(request, reservation_id):
+    reservation = get_object_or_404(Reservation, id=reservation_id)
     if request.method == 'POST':
-        form = UserReservationForm(request.POST)
+        form = ClientReservationForm(request.POST, reservation=reservation)
         if form.is_valid():
-            form.save()
+            client_reservation = form.save(commit=False)
+            client_reservation.reservation = reservation
+            client_reservation.save()
+            # Remove the selected time from the available times
+            reservation.available_times.remove(client_reservation.selected_time)
+            reservation.save()
             return redirect('index')
     else:
-        form = UserReservationForm()
+        form = ClientReservationForm(reservation=reservation)
     
-    return render(request, 'user_reservation.html', {'form': form})
-
-def load_municipalities(request):
-    county_id = request.GET.get('county')
-    municipalities = Municipality.objects.filter(county_id=county_id).order_by('name')
-    return JsonResponse(list(municipalities.values('id', 'name')), safe=False)
+    return render(request, 'create_client_reservation.html', {'form': form, 'reservation': reservation})
 
 def municipality_detail(request, municipality_id):
-    reservations = Reservation.objects.filter(municipality_id=municipality_id)
+    reservations = Reservation.objects.filter(municipality=municipality_id)
     data = {
-        'reservations': list(reservations.values('date', 'municipality__name'))
+        'reservations': list(reservations.values('date', 'municipality'))
     }
     return JsonResponse(data)
 
