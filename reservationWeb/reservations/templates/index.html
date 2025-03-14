@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservation Calendar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <style>
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Reservation Calendar</h1>
+    {% if user.is_authenticated %}
+        <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
+        <p><a href="{% url 'add_reservation' %}">Add Reservation</a></p>
+    {% else %}
+        <p><a href="{% url 'login' %}">Login</a></p>
+    {% endif %}
+    <p><a href="{% url 'user_reservation' %}">Create Reservation</a></p>
+    <div id="calendar"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize the calendar
+            $('#calendar').fullCalendar({
+                events: function(start, end, timezone, callback) {
+                    $.ajax({
+                        url: '/reservations/',
+                        success: function(data) {
+                            var events = data.reservations.map(function(reservation) {
+                                return {
+                                    title: reservation.municipality__name,
+                                    start: reservation.date
+                                };
+                            });
+                            callback(events);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error fetching reservations:', error);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
