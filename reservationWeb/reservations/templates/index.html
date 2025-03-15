@@ -13,9 +13,12 @@
     <header class="page-header">
         <h1>MANOMEDELYNAS</h1>
         <div class="user-controls">
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and user.is_superuser %}
                 <div class="user-welcome">Labas, {{ user.username }}!</div>
                 <a href="{% url 'add_reservation' %}" class="btn">+ Sukurti naują</a>
+
+                <a href="{% url 'admin_reservations' %}" class="btn">Visos rezervacijos</a>
+
                 <form method="post" action="{% url 'logout' %}" style="margin:0">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-secondary">Atsijungti</button>

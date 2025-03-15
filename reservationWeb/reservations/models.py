@@ -25,8 +25,12 @@ class Reservation(models.Model):
     def __str__(self):
         return f"{self.get_municipality_display()} on {self.date}"
 
+class ServicePlan(models.TextChoices):
+    BASIC = 'basic', _('Augalo Startas')
+    PREMIUM = 'premium', _('Augalo Ilgalaikis')
+
 class ClientReservation(models.Model):
-    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='clients')
     client_name = models.CharField(max_length=100)
     client_last_name = models.CharField(max_length=100)
     address = models.CharField(max_length=255)
@@ -35,6 +39,23 @@ class ClientReservation(models.Model):
     additional_comments = models.TextField(blank=True, null=True)
     trees_under_4m = models.BooleanField(default=False)
     selected_time = models.CharField(max_length=5)
+    
+    service_plan = models.CharField(
+        max_length=10,
+        choices=ServicePlan.choices,
+        default=ServicePlan.BASIC,
+    )
+    price_per_tree = models.DecimalField(max_digits=6, decimal_places=2, default=20.00)
+    total_price = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def save(self, *args, **kwargs):
+        if not self.total_price:
+            self.calculate_price()
+        super().save(*args, **kwargs)
+    
+    def calculate_price(self):
+        self.price_per_tree = 25.00 if self.service_plan == ServicePlan.PREMIUM else 20.00
+        self.total_price = self.price_per_tree * self.trees_count
 
     def __str__(self):
-        return f"Reservation for {self.client_name} {self.client_last_name} on {self.reservation.date} in {self.reservation.get_municipality_display()} at {self.selected_time}"
+        return f"Reservation for {self.client_name} {self.client_last_name} on {self.reservation.date} in {self.reservation.get_municipality_display()} at {self.selected_time} - {self.total_price}€"
