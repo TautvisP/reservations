@@ -4,6 +4,7 @@ from .models import Reservation, ClientReservation
 from .forms import ReservationForm, ClientReservationForm
 from django.http import JsonResponse
 from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib import messages
 
 def index(request):
     return render(request, 'index.html')
@@ -77,11 +78,17 @@ def create_client_reservation(request, reservation_id):
             # Remove the selected time from the available times
             reservation.available_times.remove(client_reservation.selected_time)
             reservation.save()
+            # Add a success message
+            messages.success(request, 'Jūsų rezervacija sėkmingai sukurta!')
+            # If it's an AJAX request, return a JSON response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({"status": "success", "message": "Reservation created successfully"})
             return redirect('index')
     else:
         form = ClientReservationForm(reservation=reservation)
     
     return render(request, 'create_client_reservation.html', {'form': form, 'reservation': reservation})
+
 
 @login_required
 def municipality_detail(request, municipality_id):

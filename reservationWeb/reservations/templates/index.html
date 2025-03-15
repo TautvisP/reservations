@@ -86,18 +86,40 @@
             }
             
             // Add dark theme styling to the calendar
-            $('.fc-widget-header').css('background-color', 'var(--primary)');
-            $('.fc-widget-header').css('color', 'var(--text)');
-            $('.fc-widget-content').css('background-color', 'var(--bg-card)');
-            $('.fc-widget-content').css('color', 'var(--text)');
-            $('.fc-button').css({
-                'background-color': 'var(--secondary)',
-                'color': 'var(--text)',
-                'border': 'none',
-                'text-shadow': 'none',
-                'box-shadow': 'none'
+            function applyCalendarStyles() {
+                $('.fc-widget-header').css('background-color', 'var(--primary)');
+                $('.fc-widget-header').css('color', 'var(--text)');
+                $('.fc-widget-content').css('background-color', 'var(--bg-card)');
+                $('.fc-widget-content').css('color', 'var(--text)');
+                $('.fc-button').css({
+                    'background-color': 'var(--secondary)',
+                    'color': 'var(--text)',
+                    'border': 'none',
+                    'text-shadow': 'none',
+                    'box-shadow': 'none'
+                });
+                $('.fc-button:hover').css('background-color', 'var(--accent)');
+                
+                // Fix today's cell styling
+                $('.fc-today').css({
+                    'background-color': 'rgba(52, 152, 219, 0.1)',
+                    'opacity': '1'
+                });
+            }
+            
+            // Apply styles initially
+            applyCalendarStyles();
+            
+            // Re-apply styles after view render to ensure today's styling is maintained
+            $('#calendar').on('viewRender', function() {
+                applyCalendarStyles();
             });
-            $('.fc-button:hover').css('background-color', 'var(--accent)');
+            
+            // Also handle button clicks to maintain styling
+            $('.fc-prev-button, .fc-next-button, .fc-today-button').click(function() {
+                // Need slight delay to let calendar redraw
+                setTimeout(applyCalendarStyles, 50);
+            });
         });
     </script>
     

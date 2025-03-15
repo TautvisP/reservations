@@ -25,7 +25,19 @@
                 <p>Užpildykite formą žemiau, kad užrezervuotumėte paslaugą {{ reservation.date|date:"Y-m-d" }} datai. Paslaugos bus teikiamos {{ reservation.get_municipality_display }} mieste.</p>
             </div>
             
-            <form method="post" class="reservation-form">
+            {% if messages %}
+            <div id="message-container" class="message-container">
+                {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    <span class="message-icon">{% if message.tags == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                    <span class="message-text">{{ message }}</span>
+                    <button class="close-message" onclick="this.parentElement.style.display='none';">×</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" class="reservation-form" id="reservation-form">
                 {% csrf_token %}
                 <div class="form-fields">
                     {% for field in form %}
@@ -100,9 +112,32 @@
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-accent">Patvirtinti Rezervaciją</button>
+                    <button type="submit" class="btn btn-accent" id="submit-btn">Patvirtinti Rezervaciją</button>
                 </div>
             </form>
+            
+            <!-- Success Modal -->
+            <div id="success-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="success-icon">✓</span>
+                        <h3>Rezervacija sėkmingai sukurta!</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Jūsų rezervacija buvo sėkmingai užregistruota. Netrukus su jumis susisieksime</p>
+                        <p class="reservation-details">
+                            <strong>Data:</strong> <span id="res-date">{{ reservation.date|date:"Y-m-d" }}</span><br>
+                            <strong>Laikas:</strong> <span id="res-time"></span><br>
+                            <strong>Miestas:</strong> <span id="res-city">{{ reservation.get_municipality_display }}</span><br>
+                            <strong>Paslaugos planas:</strong> <span id="res-plan"></span><br>
+                            <strong>Kaina:</strong> <span id="res-price"></span>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'index' %}" class="btn btn-accent">Grįžti į Kalendorių</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="calendar-card">
@@ -187,6 +222,7 @@
                 const quantity = parseInt($('#plant-count').val());
                 const totalPrice = planPrice * quantity;
                 $('#total-price-value').text(totalPrice + '€');
+                return totalPrice;
             }
             
             // Įvykių klausikliai
@@ -220,7 +256,7 @@
             // Pakeisti formos laukų placeholder tekstus į lietuvių kalbą
             $('input[name="client_name"]').attr('placeholder', 'Įveskite vardą');
             $('input[name="client_last_name"]').attr('placeholder', 'Įveskite pavardę');
-            $('input[name="phone_number"]').attr('placeholder', 'Įveskite telefono numerį');
+            $('input[name="phone_number"]').attr('placeholder', '+3706XXXXXXX');
             $('input[name="email"]').attr('placeholder', 'Įveskite el. pašto adresą');
             $('select[name="selected_time"]').find('option:first').text('Pasirinkite laiką');
             
@@ -234,6 +270,119 @@
                     $(this).text(parseInt(dateText));
                 }
             });
+            
+            // Form submission handling to show success modal
+            $('#reservation-form').on('submit', function(e) {
+                // We'll validate the form first
+                const isValid = validateForm();
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // If JavaScript is enabled, show our custom modal
+                e.preventDefault();
+                
+                // Fill the modal with reservation details
+                const selectedTime = $('#id_selected_time').val();
+                const planType = $('input[name="service_plan"]:checked').val();
+                const planName = planType === 'premium' ? '"Augalo Ilgalaikis"' : '"Augalo Startas"';
+                const plantCount = $('#plant-count').val();
+                const totalPrice = updateTotalPrice();
+                
+                $('#res-time').text(selectedTime);
+                $('#res-plan').text(`${planName} (${plantCount} ${getPlantText(plantCount)})`);
+                $('#res-price').text(`${totalPrice}€`);
+                
+                // Show modal
+                $('#success-modal').addClass('show');
+                
+                // Now actually submit the form via AJAX
+                const formData = $(this).serialize();
+                
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.href,
+                    data: formData,
+                    success: function(response) {
+                        // Modal is already showing
+                        console.log('Reservation created successfully');
+                    },
+                    error: function(xhr, status, error) {
+                        // Hide modal and show error
+                        $('#success-modal').removeClass('show');
+                        alert('Įvyko klaida kuriant rezervaciją. Bandykite dar kartą.');
+                        console.error(error);
+                    }
+                });
+            });
+            
+            function validateForm() {
+                let isValid = true;
+                
+                // Required fields
+                const requiredFields = [
+                    '#id_client_name', 
+                    '#id_client_last_name', 
+                    '#id_phone_number',
+                    '#id_selected_time'
+                ];
+                
+                // Clear previous error messages
+                $('.validation-error').remove();
+                
+                // Check each required field
+                requiredFields.forEach(field => {
+                    const value = $(field).val();
+                    if (!value || value.trim() === '') {
+                        isValid = false;
+                        $(field).after('<div class="validation-error">Šis laukas yra privalomas</div>');
+                        $(field).addClass('error-input');
+                    } else {
+                        $(field).removeClass('error-input');
+                    }
+                });
+                
+                // Validate email if provided
+                const email = $('#id_email').val();
+                if (email && !isValidEmail(email)) {
+                    isValid = false;
+                    $('#id_email').after('<div class="validation-error">Neteisingas el. pašto formatas</div>');
+                    $('#id_email').addClass('error-input');
+                }
+                
+                // Validate phone
+                const phone = $('#id_phone_number').val();
+                if (phone && !isValidPhone(phone)) {
+                    isValid = false;
+                    $('#id_phone_number').after('<div class="validation-error">Neteisingas telefono numerio formatas</div>');
+                    $('#id_phone_number').addClass('error-input');
+                }
+                
+                return isValid;
+            }
+            
+            function isValidEmail(email) {
+                const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(String(email).toLowerCase());
+            }
+            
+            function isValidPhone(phone) {
+                // Basic Lithuanian phone number validation
+                const re = /^(\+370|8)([0-9]{8})$/;
+                return re.test(String(phone).replace(/\s/g, ''));
+            }
+            
+            function getPlantText(count) {
+                if (count === '1') return 'augalas';
+                if (count % 10 === 0) return 'augalų';
+                return 'augalai';
+            }
+            
+            // Auto-hide messages after 5 seconds
+            setTimeout(function() {
+                $('.message').fadeOut('slow');
+            }, 5000);
         });
     </script>
     
@@ -398,6 +547,150 @@
         #total-price-value {
             color: var(--accent);
             font-size: 1.3rem;
+        }
+        
+        /* Success Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            animation: modalIn 0.3s ease;
+        }
+        
+        @keyframes modalIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .success-icon {
+            display: block;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            line-height: 60px;
+            text-align: center;
+            background-color: rgba(39, 174, 96, 0.2);
+            color: #2ecc71;
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .reservation-details {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            line-height: 1.6;
+        }
+        
+        /* Message Container Styles */
+        .message-container {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.success {
+            background-color: rgba(46, 204, 113, 0.15);
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .message.info {
+            background-color: rgba(52, 152, 219, 0.15);
+            border-left: 4px solid #3498db;
+        }
+        
+        .message.error {
+            background-color: rgba(231, 76, 60, 0.15);
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .message-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .message-text {
+            flex-grow: 1;
+        }
+        
+        .close-message {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+        
+        .close-message:hover {
+            color: var(--text);
+        }
+        
+        /* Form validation styles */
+        .validation-error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .error-input {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.2);
         }
         
         @media (max-width: 768px) {

@@ -53,7 +53,7 @@ class ClientReservationForm(forms.ModelForm):
             'client_name': forms.TextInput(attrs={'placeholder': 'Įveskite vardą'}),
             'client_last_name': forms.TextInput(attrs={'placeholder': 'Įveskite pavardę'}),
             'address': forms.TextInput(attrs={'placeholder': 'Įveskite adresą'}),
-            'phone_number': forms.TextInput(attrs={'placeholder': 'Įveskite telefono numerį'}),
+            'phone_number': forms.TextInput(attrs={'placeholder': '+3706XXXXXXX'}),
             'trees_count': forms.NumberInput(attrs={'placeholder': 'Įveskite medžių skaičių', 'min': '1'}),
             'additional_comments': forms.Textarea(attrs={'placeholder': 'Įveskite papildomus komentarus', 'rows': 4}),
             'trees_under_4m': forms.CheckboxInput(),
