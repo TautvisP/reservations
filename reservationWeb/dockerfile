@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     build-essential \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
@@ -24,8 +25,8 @@ RUN pip install -r requirements.txt
 # Copy the project files
 COPY . /app/
 
-# Make the startup script executable
-COPY start.sh /app/start.sh
+# Fix line endings in the startup script
+RUN dos2unix /app/start.sh
 RUN chmod +x /app/start.sh
 
 # Collect static files

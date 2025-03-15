@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Waiting for database..."
 sleep 5  # Give the database a moment to be fully ready
 
