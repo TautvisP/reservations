@@ -18,5 +18,3 @@ services:
 databases:
   - name: reservations-db
     plan: free
-    databaseName: reservations
-    user: user

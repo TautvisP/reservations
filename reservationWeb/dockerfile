@@ -11,13 +11,15 @@ WORKDIR /app
 # Copy the requirements file
 COPY requirements.txt /app/
 
-# Install dependencies
+# Install dependencies including PostgreSQL dev libraries
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \
     python3-dev \
     build-essential \
     dos2unix \
+    postgresql-client \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
