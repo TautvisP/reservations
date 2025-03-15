@@ -3,8 +3,8 @@ services:
     name: reservations
     env: docker
     plan: free
-    dockerfilePath: ./dockerfile
-    dockerContext: .
+    dockerfilePath: ./reservationWeb/dockerfile
+    dockerContext: ./reservationWeb
     envVars:
       - key: DATABASE_URL
         fromDatabase:
