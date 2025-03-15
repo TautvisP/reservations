@@ -24,11 +24,15 @@ RUN pip install -r requirements.txt
 # Copy the project files
 COPY . /app/
 
+# Make the startup script executable
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Start the Django server
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "reservationWeb.wsgi:application"]
+# Use the startup script
+CMD ["/app/start.sh"]
