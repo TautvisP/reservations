@@ -84,19 +84,19 @@ LOGOUT_REDIRECT_URL = 'index'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Change this for development
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.environ.get('DATABASE_URL', 'mysql://user:password@db:3306/reservations'),
-#         conn_max_age=600
-#     )
-# }
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', 'mysql://user:password@db:3306/reservations'),
+        conn_max_age=600
+    )
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Password validation
@@ -139,8 +139,16 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+os.makedirs(STATIC_ROOT, exist_ok=True)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+# For whitenoise with compression and caching
+WHITENOISE_MANIFEST_STRICT = False
+# Enable compression
+WHITENOISE_COMPRESS = True
