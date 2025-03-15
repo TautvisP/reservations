@@ -83,12 +83,21 @@ LOGOUT_REDIRECT_URL = 'index'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Change this for development
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.environ.get('DATABASE_URL', 'mysql://user:password@db:3306/reservations'),
+#         conn_max_age=600
+#     )
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL', 'mysql://user:password@db:3306/reservations'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

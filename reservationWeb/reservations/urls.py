@@ -11,6 +11,7 @@ urlpatterns = [
     path('edit_reservation/<int:reservation_id>/', views.edit_reservation, name='edit_reservation'),
     path('delete_reservation/<int:reservation_id>/', views.delete_reservation, name='delete_reservation'),
     path('create_client_reservation/<int:reservation_id>/', views.create_client_reservation, name='create_client_reservation'),
+    path('service-plans/', views.service_plans, name='service_plans'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
 ]

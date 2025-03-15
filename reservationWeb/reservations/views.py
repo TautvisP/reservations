@@ -9,9 +9,17 @@ def index(request):
     return render(request, 'index.html')
 
 def reservations(request):
-    reservations = Reservation.objects.all()
+    reservations_data = Reservation.objects.all()
     data = {
-        'reservations': list(reservations.values('id', 'date', 'municipality'))
+        'reservations': [
+            {
+                'id': reservation.id,
+                'date': reservation.date,
+                'municipality': reservation.municipality,  # Code
+                'municipality_name': reservation.get_municipality_display()  # Full name
+            }
+            for reservation in reservations_data
+        ]
     }
     return JsonResponse(data)
 
@@ -107,3 +115,8 @@ def date_detail(request, reservation_date):
 
 class CustomLoginView(LoginView):
     template_name = 'login.html'
+
+
+def service_plans(request):
+    """View for displaying service plans"""
+    return render(request, 'service_plans.html')
