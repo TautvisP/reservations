@@ -223,3 +223,15 @@ def admin_reservations(request):
     }
     
     return render(request, 'admin_reservations.html', context)
+
+from django.http import HttpResponse
+from django.conf import settings
+import os
+def test_static(request):
+    file_path = os.path.join(settings.STATIC_ROOT, 'css/styles.css')
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            content = file.read()
+        return HttpResponse(content, content_type='text/css')
+    else:
+        return HttpResponse("Static file not found.", status=404)

@@ -5,6 +5,7 @@ sleep 5  # Give the database a moment to be fully ready
 
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
+echo "Static files collected."
 
 echo "Running migrations..."
 python manage.py migrate
