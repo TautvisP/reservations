@@ -8,20 +8,19 @@ python manage.py migrate
 
 if [ "$CREATE_SUPERUSER" = "yes" ]; then
   echo "Creating superuser..."
-  python -c "
+  # Use manage.py shell instead of direct Python to ensure settings are loaded
+  python manage.py shell -c "
 import os
-import django
-django.setup()
 from django.contrib.auth.models import User
 username = os.environ.get('SUPERUSER_NAME', 'admin')
-email = os.environ.get('SUPERUSER_EMAIL', 'admin@example.com')
+email = os.environ.get('SUPERUSER_EMAIL', '')
 password = os.environ.get('SUPERUSER_PASSWORD')
 if not User.objects.filter(username=username).exists() and password:
     User.objects.create_superuser(username, email, password)
     print('Superuser created successfully')
 else:
     print('Superuser creation skipped')
-  "
+"
 fi
 
 echo "Starting Gunicorn..."
