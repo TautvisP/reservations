@@ -2,18 +2,28 @@ from django import forms
 from .models import Reservation, Municipality, ClientReservation
 
 class ReservationForm(forms.ModelForm):
+    time_choices = []
+    for hour in range(7, 23):
+        time_choices.append((f"{hour:02d}:00", f"{hour:02d}:00"))
+        time_choices.append((f"{hour:02d}:30", f"{hour:02d}:30"))
+    
     available_times = forms.MultipleChoiceField(
-        choices=[(f"{hour:02d}:00", f"{hour:02d}:00") for hour in range(7, 23)],
+        choices=time_choices,
         widget=forms.CheckboxSelectMultiple,
         required=True,
-        label='Available Times'
+        label='Galimi laikai'
     )
+
 
     class Meta:
         model = Reservation
         fields = ['municipality', 'date', 'available_times']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'}),
+        }
+        labels = {
+            'municipality': 'Miestas',
+            'date': 'Data',
         }
 
 class ClientReservationForm(forms.ModelForm):

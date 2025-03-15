@@ -9,10 +9,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
-<body>        
-    <div class="company-info">
-        <h2>MANOMEDELYNAS SODO PRIEŽIŪROS PROFESIONALAI</h2>
-        
+<body>
+    <header class="page-header">
+        <h1>MANOMEDELYNAS</h1>
+        <div class="user-controls">
+            {% if user.is_authenticated %}
+                <div class="user-welcome">Labas, {{ user.username }}!</div>
+                <a href="{% url 'add_reservation' %}" class="btn">+ Sukurti naują</a>
+                <form method="post" action="{% url 'logout' %}" style="margin:0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">Atsijungti</button>
+                </form>
+            {% endif %}
+        </div>
+    </header>
+    
+    <div class="page-title">
+        <h2>SODO PRIEŽIŪROS PROFESIONALAI</h2>
+    </div>
+    
+    <div class="plans-container">
         <div class="reservation-steps">
             <h3>📅 KAIP REZERVUOTI PASLAUGĄ?</h3>
             <div class="step">
@@ -41,26 +57,10 @@
         
         <!-- Navigation section -->
         <div class="navigation-container">
-            <a href="{% url 'service_plans' %}" class="btn btn-primary">Peržiūrėti Paslaugų Planus</a>
+            <a href="{% url 'service_plans' %}" class="btn">Peržiūrėti Paslaugų Planus</a>
         </div>
         
         <div class="divider"></div>
-        
-        <!-- User Controls -->
-        <div class="user-controls-container">
-            <div class="user-controls">
-                {% if user.is_authenticated %}
-                    <div class="user-welcome">Welcome, {{ user.username }}!</div>
-                    <a href="{% url 'add_reservation' %}" class="btn btn-accent">Add Reservation</a>
-                    <form method="post" action="{% url 'logout' %}" style="margin:0">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary">Logout</button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn">Login</a>
-                {% endif %}
-            </div>
-        </div>
         
         <!-- Calendar Section -->
         <div class="calendar-section">
@@ -74,8 +74,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
     <script src="{% static 'js/calendar.js' %}"></script>
     <script>
-        // Adjust calendar options for mobile
+        // Customize the calendar for dark theme
         $(document).ready(function() {
+            // Standard fullCalendar options
             if (window.innerWidth <= 768) {
                 $('#calendar').fullCalendar('option', 'header', {
                     left: 'title',
@@ -83,7 +84,34 @@
                     right: 'today prev,next'
                 });
             }
+            
+            // Add dark theme styling to the calendar
+            $('.fc-widget-header').css('background-color', 'var(--primary)');
+            $('.fc-widget-header').css('color', 'var(--text)');
+            $('.fc-widget-content').css('background-color', 'var(--bg-card)');
+            $('.fc-widget-content').css('color', 'var(--text)');
+            $('.fc-button').css({
+                'background-color': 'var(--secondary)',
+                'color': 'var(--text)',
+                'border': 'none',
+                'text-shadow': 'none',
+                'box-shadow': 'none'
+            });
+            $('.fc-button:hover').css('background-color', 'var(--accent)');
         });
     </script>
+    
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; {% now "Y" %} ManomedelyNAS. 
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="hidden-admin-link">Visos teisės saugomos.</a>
+                {% else %}
+                    <span>Visos teisės saugomos.</span>
+                {% endif %}
+            </div>
+        </div>
+    </footer>
 </body>
 </html>

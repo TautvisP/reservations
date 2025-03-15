@@ -1,15 +1,28 @@
 $(document).ready(function() {
-    // Initialize the calendar with month-only view
+    // Initialize the calendar with Lithuanian settings
     $('#calendar').fullCalendar({
+        locale: 'lt',
         header: {
             left: 'prev,next',
             center: 'title',
             right: 'today'
         },
+        buttonText: {
+            today: 'Šiandien',
+            month: 'Mėnuo',
+            week: 'Savaitė',
+            day: 'Diena'
+        },
+        monthNames: ['Sausis', 'Vasaris', 'Kovas', 'Balandis', 'Gegužė', 'Birželis', 'Liepa', 'Rugpjūtis', 'Rugsėjis', 'Spalis', 'Lapkritis', 'Gruodis'],
+        monthNamesShort: ['Sau', 'Vas', 'Kov', 'Bal', 'Geg', 'Bir', 'Lie', 'Rgp', 'Rgs', 'Spa', 'Lap', 'Grd'],
+        dayNames: ['Sekmadienis', 'Pirmadienis', 'Antradienis', 'Trečiadienis', 'Ketvirtadienis', 'Penktadienis', 'Šeštadienis'],
+        dayNamesShort: ['Sek', 'Pir', 'Ant', 'Tre', 'Ket', 'Pen', 'Šeš'],
+        firstDay: 1,  // Monday as first day of week
         themeSystem: 'standard',
-        defaultView: 'month',  // Always use month view
+        defaultView: 'month',
         height: 'auto',
         contentHeight: 'auto',
+        
         // Disable view switching completely
         views: {
             month: {
@@ -58,11 +71,11 @@ $(document).ready(function() {
                 success: function(data) {
                     var reservations = data.reservations;
                     if (reservations.length === 0) {
-                        $('#reservation-details').html('<p>No reservations for this date.</p>');
+                        $('#reservation-details').html('<p>Jokių rezervacijų šiai dienai nėra.</p>');
                         return;
                     }
                     
-                    var reservationList = '<h3>Reservations for ' + date.format('MMMM D, YYYY') + '</h3><ul>';
+                    var reservationList = '<h3>Rezervacijos: ' + date.format('YYYY-MM-DD') + '</h3><ul>';
                     reservations.forEach(function(reservation) {
                         // Use full municipality name here as well
                         var municipalityName = getMunicipalityName(reservation.municipality);
@@ -70,8 +83,8 @@ $(document).ready(function() {
                         
                         if (reservation.is_superuser) {
                             reservationList += '<div class="reservation-actions">' +
-                                '<a href="/edit_reservation/' + reservation.id + '" class="btn">Edit</a>' +
-                                '<a href="/delete_reservation/' + reservation.id + '" class="btn btn-secondary">Delete</a>' +
+                                '<a href="/edit_reservation/' + reservation.id + '" class="btn">Redaguoti</a>' +
+                                '<a href="/delete_reservation/' + reservation.id + '" class="btn btn-secondary">Ištrinti</a>' +
                                 '</div>';
                         }
                         
@@ -82,7 +95,7 @@ $(document).ready(function() {
                             });
                             reservationList += '</ul>';
                         } else {
-                            reservationList += '<p><em>No client reservations yet</em></p>';
+                            reservationList += '<p><em>Dar nėra klientų rezervacijų</em></p>';
                         }
                         
                         reservationList += '</li>';
@@ -92,7 +105,7 @@ $(document).ready(function() {
                 },
                 error: function(xhr, status, error) {
                     console.error('Error fetching reservations:', error);
-                    $('#reservation-details').html('<p>Error loading reservation details.</p>');
+                    $('#reservation-details').html('<p>Klaida bandant gauti rezervacijų informaciją.</p>');
                 }
             });
         },
@@ -103,7 +116,7 @@ $(document).ready(function() {
         }
     });
     
-    // Helper function to convert municipality codes to full names
+    // Helper function to convert municipality codes to full names in Lithuanian
     function getMunicipalityName(code) {
         var municipalities = {
             'ALY': 'Alytus',

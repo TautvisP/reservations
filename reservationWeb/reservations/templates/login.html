@@ -1,16 +1,129 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - MANOMEDELYNAS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            color: var(--text);
+        }
+
+        .login-form {
+            margin-bottom: 20px;
+        }
+        
+        .login-form p {
+            margin-bottom: 15px;
+        }
+        
+        .login-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .login-form button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .login-form button:hover {
+            background-color: var(--accent-dark);
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+
+        .error-message {
+            background-color: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #ff4d4d;
+            color: #ff4d4d;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            border-radius: 3px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Login</button>
-    </form>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>MANOMEDELYNAS</h1>
+        </div>
+
+        {% if form.errors %}
+        <div class="error-message">
+            Neteisingas vartotojo vardas arba slaptažodis. Bandykite dar kartą.
+        </div>
+        {% endif %}
+
+        <form method="post" class="login-form">
+            {% csrf_token %}
+            <p>
+                <label for="id_username">Vartotojo vardas:</label>
+                {{ form.username }}
+            </p>
+            <p>
+                <label for="id_password">Slaptažodis:</label>
+                {{ form.password }}
+            </p>
+            <button type="submit">Prisijungti</button>
+        </form>
+
+        <a href="{% url 'index' %}" class="back-link">Grįžti į pagrindinį puslapį</a>
+    </div>
 </body>
 </html>
