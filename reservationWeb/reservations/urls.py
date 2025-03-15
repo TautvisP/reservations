@@ -15,7 +15,4 @@ urlpatterns = [
     path('service-plans/', views.service_plans, name='service_plans'),
     path('login/', views.CustomLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-
-    path('test-static/', views.test_static, name='test_static'),
-
 ]
