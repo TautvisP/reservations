@@ -128,7 +128,9 @@ $(document).ready(function() {
             'TAU': 'Tauragė',
             'TEL': 'Telšiai',
             'UTA': 'Utena',
-            'VIL': 'Vilnius'
+            'VIL': 'Vilnius',
+            'UKM': 'Ukmergė',
+            'PRN': 'Prienai'
         };
         return municipalities[code] || code;
     }
@@ -145,7 +147,9 @@ $(document).ready(function() {
             'TAU': '#d35400', // Pumpkin
             'TEL': '#27ae60', // Nephritis
             'UTA': '#e67e22', // Carrot
-            'VIL': '#8e44ad'  // Wisteria
+            'VIL': '#8e44ad',  // Wisteria
+            'UKM': '#2d8659', // Forest Green
+            'PRN': '#58b368'  // Moss Green
         };
         return colors[code] || '#3498db';
     }
