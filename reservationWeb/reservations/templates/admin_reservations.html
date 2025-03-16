@@ -110,6 +110,7 @@
                                     <th>Adresas</th>
                                     <th>Medžių sk.</th>
                                     <th><4m</th>
+                                    <th>Sodinimas</th>
                                     <th>Planas</th>
                                     <th>Kaina/vnt</th>
                                     <th>Suma</th>
@@ -122,10 +123,17 @@
                                     <td>{{ client.client_name }}</td>
                                     <td>{{ client.client_last_name }}</td>
                                     <td>{{ client.phone_number }}</td>
-                                    <td>{{ client.selected_time }}</td>
+                                    <td>
+                                        {% if client.selected_time == 'contact_me' %}
+                                            Dėl laiko susisieksime
+                                        {% else %}
+                                            {{ client.selected_time }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ client.address }}</td>
                                     <td>{{ client.trees_count }}</td>
                                     <td>{% if client.trees_under_4m %}Taip{% else %}Ne{% endif %}</td>
+                                    <td>{% if client.planting_required == "yes" %}Taip{% else %}Ne{% endif %}</td> <!-- New cell for planting_required -->
                                     <td>{{ client.get_service_plan_display }}</td>
                                     <td>{{ client.price_per_tree }}€</td>
                                     <td class="price-cell">{{ client.total_price }}€</td>
@@ -139,7 +147,7 @@
                             </tbody>
                             <tfoot>
                                 <tr>
-                                    <td colspan="9" class="total-row">Bendra suma:</td>
+                                    <td colspan="10" class="total-row">Bendra suma:</td>
                                     <td class="price-cell total-price">
                                         {{ total_revenue }}€
                                     </td>

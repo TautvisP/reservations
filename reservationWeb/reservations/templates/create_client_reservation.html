@@ -22,7 +22,7 @@
     <div class="reservation-container">
         <div class="form-card">
             <div class="reservation-instructions">
-                <p>Užpildykite formą žemiau, kad užrezervuotumėte paslaugą {{ reservation.date|date:"Y-m-d" }} datai. Paslaugos bus teikiamos {{ reservation.get_municipality_display }} mieste.</p>
+                <p>Užpildykite formą žemiau, kad užrezervuotumėte paslaugą {{ reservation.date|date:"Y-m-d" }} datai. Paslaugos bus teikiamos {{ reservation.get_municipality_display }} rajone.</p>
             </div>
             
             {% if messages %}
@@ -113,6 +113,7 @@
                         <span>Galutinė kaina: <strong id="total-price-value">20€</strong></span>
                     </div>
                 </div>
+
                 <div class="form-actions">
                     <button type="submit" class="btn btn-accent" id="submit-btn">Patvirtinti Rezervaciją</button>
                 </div>
@@ -142,28 +143,7 @@
             </div>
         </div>
         
-        <div class="calendar-card">
-            <div class="calendar-heading">
-                <h3>Jūsų pasirinkta data</h3>
-                <p class="selected-date">{{ reservation.date|date:"Y-m-d" }}</p>
-            </div>
-            <div id="calendar"></div>
-        </div>
     </div>
-
-    <footer class="page-footer">
-        <div class="footer-content">
-            <div class="copyright">
-                &copy; {% now "Y" %} ManomedelyNAS. 
-                {% if not user.is_authenticated %}
-                    <a href="{% url 'login' %}" class="hidden-admin-link">Visos teisės saugomos.</a>
-                {% else %}
-                    <span>Visos teisės saugomos.</span>
-                {% endif %}
-            </div>
-        </div>
-    </footer>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/lt.js"></script>
@@ -173,53 +153,8 @@
             // Nustatyti lietuvių kalbą momentjs bibliotekai
             moment.locale('lt');
             
-            // Inicializuoti kalendorių su lietuviškais nustatymais ir iš anksto pasirinkta data
-            $('#calendar').fullCalendar({
-                locale: 'lt',
-                height: 350,
-                defaultDate: '{{ reservation.date|date:"Y-m-d" }}',
-                header: {
-                    left: 'title',
-                    center: '',
-                    right: 'prev,next'
-                },
-                buttonText: {
-                    today: 'Šiandien',
-                    month: 'Mėnuo',
-                    week: 'Savaitė',
-                    day: 'Diena'
-                },
-                monthNames: ['Sausis', 'Vasaris', 'Kovas', 'Balandis', 'Gegužė', 'Birželis', 'Liepa', 'Rugpjūtis', 'Rugsėjis', 'Spalis', 'Lapkritis', 'Gruodis'],
-                monthNamesShort: ['Sau', 'Vas', 'Kov', 'Bal', 'Geg', 'Bir', 'Lie', 'Rgp', 'Rgs', 'Spa', 'Lap', 'Grd'],
-                dayNames: ['Sekmadienis', 'Pirmadienis', 'Antradienis', 'Trečiadienis', 'Ketvirtadienis', 'Penktadienis', 'Šeštadienis'],
-                dayNamesShort: ['Sek', 'Pir', 'Ant', 'Tre', 'Ket', 'Pen', 'Šeš'],
-                firstDay: 1,
-                events: [
-                    {
-                        title: '{{ reservation.get_municipality_display }}',
-                        start: '{{ reservation.date|date:"Y-m-d" }}',
-                        backgroundColor: '#3498db',
-                        borderColor: '#3498db'
-                    }
-                ]
-            });
-            
-            // Tamsios temos stilius kalendoriui
-            $('.fc-widget-header').css('background-color', 'var(--primary)');
-            $('.fc-widget-header').css('color', 'var(--text)');
-            $('.fc-widget-content').css('background-color', 'var(--bg-card)');
-            $('.fc-widget-content').css('color', 'var(--text)');
-            $('.fc-button').css({
-                'background-color': 'var(--secondary)',
-                'color': 'var(--text)',
-                'border': 'none',
-                'text-shadow': 'none',
-                'box-shadow': 'none'
-            });
-            $('.fc-button:hover').css('background-color', 'var(--accent)');
-            
-                // Update the function to use trees_count instead of plant_count
-                function updateTotalPrice() {
+            // Update the function to use trees_count instead of plant_count
+            function updateTotalPrice() {
                 const planPrice = $('input[name="service_plan"]:checked').val() === 'premium' ? 25 : 20;
                 const quantity = parseInt($('#plant-count').val());
                 const totalPrice = planPrice * quantity;
@@ -262,17 +197,6 @@
             $('input[name="client_last_name"]').attr('placeholder', 'Įveskite pavardę');
             $('input[name="phone_number"]').attr('placeholder', '+3706XXXXXXX');
             $('select[name="selected_time"]').find('option:first').text('Pasirinkite laiką');
-            
-            // Formatuoti datą lietuvišku formatu
-            $('.selected-date').text(moment('{{ reservation.date|date:"Y-m-d" }}').format('YYYY-MM-DD'));
-            
-            // Pakeisti datos formatą kalendoriuje
-            $('.fc-day-number').each(function() {
-                let dateText = $(this).text();
-                if (dateText && !isNaN(dateText)) {
-                    $(this).text(parseInt(dateText));
-                }
-            });
             
             // Form submission handling to show success modal
             $('#reservation-form').on('submit', function(e) {

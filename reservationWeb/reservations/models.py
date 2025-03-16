@@ -12,6 +12,8 @@ class Municipality(models.TextChoices):
     TELSIAI = 'TEL', _('Telšiai')
     UTENA = 'UTA', _('Utena')
     VILNIUS = 'VIL', _('Vilnius')
+    UKMERGE = 'UKM', _('Ukmergė')
+    PRIENAI = 'PRN', _('Prienai')
 
 class Reservation(models.Model):
     municipality = models.CharField(
@@ -38,12 +40,17 @@ class ClientReservation(models.Model):
     trees_count = models.IntegerField()
     additional_comments = models.TextField(blank=True, null=True)
     trees_under_4m = models.BooleanField(default=False)
-    selected_time = models.CharField(max_length=5)
+    selected_time = models.CharField(max_length=20)
     
     service_plan = models.CharField(
         max_length=10,
         choices=ServicePlan.choices,
         default=ServicePlan.BASIC,
+    )
+    planting_required = models.CharField(
+        max_length=3,
+        choices=[('yes', 'TAIP'), ('no', 'NE')],
+        default='no',
     )
     price_per_tree = models.DecimalField(max_digits=6, decimal_places=2, default=20.00)
     total_price = models.DecimalField(max_digits=8, decimal_places=2)

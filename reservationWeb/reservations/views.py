@@ -90,9 +90,11 @@ def create_client_reservation(request, reservation_id):
             
             client_reservation.save()
             
-            # Remove the selected time from the available times
-            reservation.available_times.remove(client_reservation.selected_time)
-            reservation.save()
+            # Only remove the selected time from available times if it's not 'contact_me'
+            selected_time = client_reservation.selected_time
+            if selected_time != 'contact_me' and selected_time in reservation.available_times:
+                reservation.available_times.remove(selected_time)
+                reservation.save()
             
             # Add a success message
             messages.success(request, 'Jūsų rezervacija sėkmingai sukurta!')
