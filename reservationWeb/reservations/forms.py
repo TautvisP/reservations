@@ -48,8 +48,13 @@ class ClientReservationForm(forms.ModelForm):
     )
 
     planting_required = forms.ChoiceField(
-        choices=[('yes', 'TAIP'), ('no', 'NE')],
-        label='Ar bus reikalingas augalų sodinimas ir augalų pristatymas iš manomedelynas.lt',
+        choices=[
+            ('no', 'NE'),
+            ('planting_only', 'TAIP, tik sodinimas'),
+            ('planting_and_delivery', 'TAIP, augalai su pristatymu ir sodinimas')
+        ],
+        initial='no',
+        label='Ar bus reikalingas augalų sodinimas ir augalų pristatymasiš MANOMEDELYNAS.LT',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
@@ -70,7 +75,7 @@ class ClientReservationForm(forms.ModelForm):
             'trees_under_4m': 'Visi augalai iki 4m. aukščio',
             'selected_time': 'Pasirinktas laikas',
             'service_plan': 'Paslaugos planas',
-            'planting_required': 'Ar bus reikalingas augalų sodinimas ir augalų pristatymas iš manomedelynas.lt'
+            'planting_required': 'Ar bus reikalingas augalų sodinimas ir augalų pristatymas iš MANOMEDELYNAS.LT'
 
         }
         widgets = {

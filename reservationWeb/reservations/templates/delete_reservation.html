@@ -11,7 +11,7 @@
 </head>
 <body>
     <header class="page-header">
-        <h1>MANOMEDELYNAS</h1>
+        <h1>MANOMEDELYNAS.LT</h1>
         <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
     </header>
 
@@ -50,7 +50,7 @@
     <footer class="page-footer">
         <div class="footer-content">
             <div class="copyright">
-                &copy; {% now "Y" %} ManomedelyNAS. 
+                &copy; {% now "Y" %} MANOMEDELYNAS.LT. 
                 {% if not user.is_authenticated %}
                     <a href="{% url 'login' %}" class="hidden-admin-link">Visos teisės saugomos.</a>
                 {% else %}

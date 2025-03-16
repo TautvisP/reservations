@@ -48,10 +48,15 @@ class ClientReservation(models.Model):
         default=ServicePlan.BASIC,
     )
     planting_required = models.CharField(
-        max_length=3,
-        choices=[('no', 'NE'), ('yes', 'TAIP'),],
+        max_length=22,
+        choices=[
+            ('no', 'NE'),
+            ('planting_only', 'TAIP, tik sodinimas'),
+            ('planting_and_delivery', 'TAIP, augalai su pristatymu ir sodinimas')
+        ],
         default='no',
     )
+
     price_per_tree = models.DecimalField(max_digits=6, decimal_places=2, default=20.00)
     total_price = models.DecimalField(max_digits=8, decimal_places=2)
 

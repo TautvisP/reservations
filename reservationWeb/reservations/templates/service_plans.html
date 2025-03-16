@@ -8,9 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2e7d32;      
-            --secondary: #388e3c;    
-            --accent: #4caf50;   
+            --primary: #023020;      
+            --secondary: #023020;    
+            --accent: #4CBB17;   
             --accent-dark: #2e7d32;
             --text: #ecf0f1;        
             --text-muted: #bdc3c7;  
@@ -102,7 +102,7 @@
         }
         
         .plan-header {
-            background-color: var(--primary);
+            background-color: var(--accent);
             padding: 16px;
             position: relative;
         }
@@ -111,7 +111,17 @@
             position: absolute;
             top: 16px;
             left: 16px;
-            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .circle-icon {
+            display: block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .plan-title-wrapper {
@@ -126,7 +136,7 @@
         
         .plan-price {
             font-size: 0.9rem;
-            color: var(--accent);
+            color: var(--text);
         }
         
         .plan-content {
@@ -203,11 +213,12 @@
                 padding: 20px;
             }
         }
+        
     </style>
 </head>
 <body>
     <header class="page-header">
-        <h1>MANOMEDELYNAS</h1>
+        <h1>MANOMEDELYNAS.LT</h1>
         <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
     </header>
 
@@ -219,7 +230,9 @@
     <div class="plans-container">
         <div class="plan-card">
             <div class="plan-header">
-                <span class="plan-icon">🟢</span>
+                <span class="plan-icon">
+                    <span class="circle-icon" style="background-color: #87CEEB;"></span>
+                </span>
                 <div class="plan-title-wrapper">
                     <div class="plan-title">„Augalo Startas"</div>
                     <div class="plan-price">20€ už žemaūgį augalą</div>
@@ -239,7 +252,9 @@
         
         <div class="plan-card">
             <div class="plan-header">
-                <span class="plan-icon">🔵</span>
+                <span class="plan-icon">
+                    <span class="circle-icon" style="background-color: #003366;"></span>
+                </span>
                 <div class="plan-title-wrapper">
                     <div class="plan-title">„Augalo Ilgalaikis"</div>
                     <div class="plan-price">25€ už žemaūgį augalą</div>

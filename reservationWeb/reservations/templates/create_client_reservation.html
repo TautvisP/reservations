@@ -11,7 +11,7 @@
 </head>
 <body>
     <header class="page-header">
-        <h1>MANOMEDELYNAS.lt</h1>
+        <h1>MANOMEDELYNAS.LT</h1>
         <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
     </header>
 
@@ -84,7 +84,9 @@
                             <input type="radio" name="service_plan" id="plan-basic" value="basic" {% if form.service_plan.value != 'premium' %}checked{% endif %}>
                             <label for="plan-basic">
                                 <div class="plan-icon-container">
-                                    <span class="plan-icon">🟢</span>
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #87CEEB;"></span>
+                                    </span>
                                 </div>
                                 <div class="plan-option-details">
                                     <strong>"Augalo Startas"</strong>
@@ -96,7 +98,9 @@
                             <input type="radio" name="service_plan" id="plan-premium" value="premium" {% if form.service_plan.value == 'premium' %}checked{% endif %}>
                             <label for="plan-premium">
                                 <div class="plan-icon-container">
-                                    <span class="plan-icon">🔵</span>
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #003366;"></span>
+                                    </span>
                                 </div>
                                 <div class="plan-option-details">
                                     <strong>"Augalo Ilgalaikis"</strong>
@@ -423,14 +427,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             margin-right: 12px;
             flex-shrink: 0;
         }
-        
         .plan-icon {
-            font-size: 1.5rem;
+            position: static;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+        }
+
+        .circle-icon {
+            display: block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .plan-option:nth-child(1) .plan-icon,
+        .plan-option:nth-child(2) .plan-icon {
+            color: inherit;
         }
         
         .plan-option-details {

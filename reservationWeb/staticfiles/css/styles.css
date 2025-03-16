@@ -1,7 +1,7 @@
 :root {
-    --primary: #2e7d32;      
-    --secondary: #388e3c;    
-    --accent: #4caf50;   
+    --primary: #023020;      
+    --secondary: #023020;    
+    --accent: #4CBB17;   
     --accent-dark: #2e7d32;
     --text: #ecf0f1;        
     --text-muted: #bdc3c7;  
@@ -62,7 +62,6 @@ header {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
 }

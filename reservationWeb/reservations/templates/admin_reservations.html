@@ -11,7 +11,7 @@
 </head>
 <body>
     <header class="page-header">
-        <h1>MANOMEDELYNAS</h1>
+        <h1>MANOMEDELYNAS.LT</h1>
         <div class="user-controls">
             <a href="{% url 'index' %}" class="btn btn-secondary">Grįžti į Kalendorių</a>
             <a href="{% url 'add_reservation' %}" class="btn">+ Sukurti naują</a>
@@ -133,7 +133,15 @@
                                     <td>{{ client.address }}</td>
                                     <td>{{ client.trees_count }}</td>
                                     <td>{% if client.trees_under_4m %}Taip{% else %}Ne{% endif %}</td>
-                                    <td>{% if client.planting_required == "yes" %}Taip{% else %}Ne{% endif %}</td> <!-- New cell for planting_required -->
+                                    <td>
+                                        {% if client.planting_required == "no" %}
+                                            Ne
+                                        {% elif client.planting_required == "planting_only" %}
+                                            TAIP, tik sodinimas
+                                        {% elif client.planting_required == "planting_and_delivery" %}
+                                            TAIP, augalai su pristatymu ir sodinimas
+                                        {% endif %}
+                                    </td>
                                     <td>{{ client.get_service_plan_display }}</td>
                                     <td>{{ client.price_per_tree }}€</td>
                                     <td class="price-cell">{{ client.total_price }}€</td>
@@ -194,7 +202,7 @@
     <footer class="page-footer">
         <div class="footer-content">
             <div class="copyright">
-                &copy; {% now "Y" %} ManomedelyNAS. 
+                &copy; {% now "Y" %} MANOMEDELYNAS.LT. 
                 <span>Visos teisės saugomos.</span>
             </div>
         </div>
