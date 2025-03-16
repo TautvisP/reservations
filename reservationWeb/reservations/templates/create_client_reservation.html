@@ -304,7 +304,7 @@
         .reservation-instructions {
             margin-bottom: 20px;
             padding: 15px;
-            background-color: rgba(52, 152, 219, 0.1);
+            background-color: rgba(76, 175, 80, 0.1);  /* Green with opacity (was blue) */
             border-radius: var(--border-radius);
         }
         
@@ -387,7 +387,7 @@
         
         .plan-option input[type="radio"]:checked + label {
             border-color: var(--accent);
-            background-color: rgba(52, 152, 219, 0.1);
+            background-color: rgba(76, 175, 80, 0.1);
         }
         
         .plan-icon-container {
@@ -513,8 +513,8 @@
             font-size: 2rem;
             line-height: 60px;
             text-align: center;
-            background-color: rgba(39, 174, 96, 0.2);
-            color: #2ecc71;
+            background-color: rgba(56, 142, 60, 0.2); 
+            color: #4caf50; 
             border-radius: 50%;
         }
         
@@ -529,11 +529,19 @@
         }
         
         .reservation-details {
-            background-color: rgba(52, 152, 219, 0.1);
+            background-color: rgba(76, 175, 80, 0.1);  /* Green with opacity (was blue) */
             padding: 15px;
             border-radius: 5px;
             margin-top: 15px;
             line-height: 1.6;
+        }   
+        
+        .plan-option:nth-child(1) .plan-icon {
+            color: #8bc34a;  /* Light green */
+        }
+    
+        .plan-option:nth-child(2) .plan-icon {
+            color: #4caf50;  /* Medium green */
         }
         
         /* Message Container Styles */
@@ -557,13 +565,13 @@
         }
         
         .message.success {
-            background-color: rgba(46, 204, 113, 0.15);
-            border-left: 4px solid #2ecc71;
+            background-color: rgba(76, 175, 80, 0.15);
+            border-left: 4px solid #4caf50; 
         }
         
         .message.info {
-            background-color: rgba(52, 152, 219, 0.15);
-            border-left: 4px solid #3498db;
+            background-color: rgba(56, 142, 60, 0.15);  
+            border-left: 4px solid #388e3c;  
         }
         
         .message.error {
