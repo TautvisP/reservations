@@ -49,7 +49,7 @@ class ClientReservation(models.Model):
     )
     planting_required = models.CharField(
         max_length=3,
-        choices=[('yes', 'TAIP'), ('no', 'NE')],
+        choices=[('no', 'NE'), ('yes', 'TAIP'),],
         default='no',
     )
     price_per_tree = models.DecimalField(max_digits=6, decimal_places=2, default=20.00)

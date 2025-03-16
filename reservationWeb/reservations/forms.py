@@ -81,7 +81,8 @@ class ClientReservationForm(forms.ModelForm):
             'additional_comments': forms.Textarea(attrs={'placeholder': 'Įveskite papildomus komentarus', 'rows': 3}),
         }
         help_texts = {
-            'trees_under_4m': 'Pažymėkite, jei visi augalai yra žemaūgiai arba vidutinio audumo (iki 4 metrų aukščio)',
+            'trees_under_4m': 'Pažymėkite, jei visi augalai yra žemaūgiai arba vidutinio augumo (iki 4 metrų aukščio)',
+            'selected_time': 'Nelikus laisvų laikų, susisieksime',
         }
 
     def __init__(self, *args, **kwargs):
@@ -90,20 +91,20 @@ class ClientReservationForm(forms.ModelForm):
         if reservation:
             # Start with placeholder
             choices = [('', 'Pasirinkite laiką')]
-            
+
             # Add all times regardless of type
             if hasattr(reservation, 'available_times') and reservation.available_times:
                 if isinstance(reservation.available_times, str):
                     times = [t.strip() for t in reservation.available_times.split(',')]
                 else:
                     times = list(reservation.available_times)
-                
+
                 for time in times:
                     if time:  # Skip empty strings
                         choices.append((time, time))
-            
+
             # Add contact option
             choices.append(('contact_me', 'Dėl laiko susisieksime'))
-            
+
             # Set choices
             self.fields['selected_time'].choices = choices
