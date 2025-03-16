@@ -15,7 +15,7 @@
         <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
     </header>
 
-    <div class="page-title">
+    <div class="page-title reservation-title">
         <h2>SUKURTI REZERVACIJĄ</h2>
     </div>
     
@@ -312,8 +312,20 @@
         .reservation-instructions {
             margin-bottom: 20px;
             padding: 15px;
-            background-color: rgba(76, 175, 80, 0.1);  /* Green with opacity (was blue) */
+            background-color: rgba(76, 175, 80, 0.1);
             border-radius: var(--border-radius);
+        }
+
+        .page-title.reservation-title {
+            background-color: var(--accent);
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .page-title.reservation-title h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text);
         }
         
         .available-times {
@@ -579,7 +591,7 @@
         }
         
         .reservation-details {
-            background-color: rgba(76, 175, 80, 0.1);  /* Green with opacity (was blue) */
+            background-color: rgba(76, 175, 80, 0.1);
             padding: 15px;
             border-radius: 5px;
             margin-top: 15px;
@@ -587,11 +599,11 @@
         }   
         
         .plan-option:nth-child(1) .plan-icon {
-            color: #8bc34a;  /* Light green */
+            color: #8bc34a;
         }
     
         .plan-option:nth-child(2) .plan-icon {
-            color: #4caf50;  /* Medium green */
+            color: #4caf50;
         }
         
         /* Message Container Styles */
