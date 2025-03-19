@@ -13,6 +13,9 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from datetime import timedelta
 from django.urls import reverse_lazy
+from django.core.mail import send_mail
+from django.conf import settings
+from django.core.mail import EmailMessage
 
 
 class IndexView(TemplateView):
@@ -96,29 +99,77 @@ class ClientReservationCreateView(View):
     def post(self, request, reservation_id):
         reservation = get_object_or_404(Reservation, id=reservation_id)
         form = ClientReservationForm(request.POST, reservation=reservation)
-        
+
         if form.is_valid():
             client_reservation = form.save(commit=False)
             client_reservation.reservation = reservation
-            
+
             # Calculate the price based on form data
             service_plan = form.cleaned_data['service_plan']
             trees_count = form.cleaned_data['trees_count']
             price_per_tree = 25.00 if service_plan == 'premium' else 20.00
             client_reservation.price_per_tree = price_per_tree
             client_reservation.total_price = price_per_tree * trees_count
-            
+
             client_reservation.save()
-            
+
             # Only remove the selected time from available times if it's not 'contact_me'
             selected_time = client_reservation.selected_time
             if selected_time != 'contact_me' and selected_time in reservation.available_times:
                 reservation.available_times.remove(selected_time)
                 reservation.save()
-            
+
+            # Send email notification
+            service_plan_name = "Augalo Ilgalaikis" if service_plan == "premium" else "Augalo Startas"
+            time_display = "Susisiekti dėl laiko" if selected_time == 'contact_me' else selected_time
+
+            subject = f"Nauja rezervacija: {client_reservation.client_name} {client_reservation.client_last_name}"
+            message = f"""
+    Gauta nauja rezervacija!
+
+    Informacija apie klientą:
+    - Vardas, Pavardė: {client_reservation.client_name} {client_reservation.client_last_name}
+    - Telefonas: {client_reservation.phone_number}
+    - Adresas: {client_reservation.address}
+    - Data: {reservation.date}
+    - Laikas: {time_display}
+    - Miestas: {reservation.get_municipality_display()}
+    - Pasirinktas planas: {service_plan_name}
+    - Augalų skaičius: {trees_count}
+    - Bendra suma: {client_reservation.total_price}€
+    - Papildomi komentarai: {client_reservation.additional_comments or "-"}
+    - Žemaūgiai augalai (iki 3m): {"Taip" if client_reservation.trees_under_4m else "Ne"}
+
+    Linkime geros dienos!
+            """
+
+            # Add planting information if available
+            if hasattr(client_reservation, 'planting_required'):
+                planting_info = {
+                    'no': 'Ne',
+                    'planting_only': 'TAIP, tik sodinimas',
+                    'planting_and_delivery': 'TAIP, augalai su pristatymu ir sodinimas'
+                }.get(client_reservation.planting_required, 'Ne')
+
+                message += f"\nAr bus reikalingas augalų sodinimas ir augalų pristatymasiš MANOMEDELYNAS.LT: {planting_info}"
+
+            # Send the email
+            try:
+                email = EmailMessage(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.ADMIN_EMAIL],
+                    headers={'Reply-To': settings.DEFAULT_FROM_EMAIL}
+                )
+                email.send(fail_silently=False)
+                print(f"Email notification sent successfully to {settings.ADMIN_EMAIL}")
+            except Exception as e:
+                print(f"Failed to send email notification: {str(e)}")
+
             # Add a success message
             messages.success(request, 'Jūsų rezervacija sėkmingai sukurta!')
-            
+
             # If it's an AJAX request, return a JSON response
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({
@@ -127,7 +178,7 @@ class ClientReservationCreateView(View):
                     "price": float(client_reservation.total_price)
                 })
             return redirect('index')
-            
+
         return render(request, self.template_name, {'form': form, 'reservation': reservation})
 
 

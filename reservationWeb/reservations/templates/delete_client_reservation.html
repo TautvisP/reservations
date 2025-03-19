@@ -37,7 +37,7 @@
                         {% endif %}
                     </li>
                     <li><strong>Augalų skaičius:</strong> {{ client.trees_count }}</li>
-                    <li><strong>Augalai iki 4m:</strong> {% if client.trees_under_4m %}Taip{% else %}Ne{% endif %}</li>
+                    <li><strong>Augalai iki 3m:</strong> {% if client.trees_under_4m %}Taip{% else %}Ne{% endif %}</li>
                     <li><strong>Paslaugos planas:</strong> {{ client.get_service_plan_display }}</li>
                     <li><strong>Suma:</strong> {{ client.total_price }}€</li>
                 </ul>

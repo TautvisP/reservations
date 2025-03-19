@@ -54,7 +54,7 @@ class ClientReservationForm(forms.ModelForm):
             ('planting_and_delivery', 'TAIP, augalai su pristatymu ir sodinimas')
         ],
         initial='no',
-        label='Ar bus reikalingas augalų sodinimas ir augalų pristatymasiš MANOMEDELYNAS.LT',
+        label='Ar bus reikalingas augalų sodinimas ir augalų pristatymas iš MANOMEDELYNAS.LT',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
@@ -72,7 +72,7 @@ class ClientReservationForm(forms.ModelForm):
             'phone_number': 'Telefono numeris',
             'trees_count': 'Augalų skaičius',
             'additional_comments': 'Papildomi komentarai',
-            'trees_under_4m': 'Visi augalai iki 4m. aukščio',
+            'trees_under_4m': 'Visi augalai iki 3m. aukščio',
             'selected_time': 'Pasirinktas laikas',
             'service_plan': 'Paslaugos planas',
             'planting_required': 'Ar bus reikalingas augalų sodinimas ir augalų pristatymas iš MANOMEDELYNAS.LT'
@@ -86,7 +86,7 @@ class ClientReservationForm(forms.ModelForm):
             'additional_comments': forms.Textarea(attrs={'placeholder': 'Įveskite papildomus komentarus', 'rows': 3}),
         }
         help_texts = {
-            'trees_under_4m': 'Pažymėkite, jei visi augalai yra žemaūgiai arba vidutinio augumo (iki 4 metrų aukščio)',
+            'trees_under_4m': 'Pažymėkite, jei visi augalai yra žemaūgiai arba vidutinio augumo (iki 3 metrų aukščio)',
             'selected_time': 'Nelikus laisvų laikų, susisieksime',
         }
 
