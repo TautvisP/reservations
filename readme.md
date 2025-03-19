@@ -36,16 +36,16 @@ The application is configured for deployment on Render. The render.yaml file in 
 
 ## Visuals
 **Main page**
-![Main page first photo](image-1.png)
-![Main page second photo](image-2.png)
+![Main page first photo](images/image-1.png)
+![Main page second photo](images/image-2.png)
 
 **Service plan page**
-![Service plan page](image-3.png)
+![Service plan page](images/image-3.png)
 
 **Client reservation creation**
-![Client reservation page](image-6.png)
-![Client reservation page 2](image-4.png)
-<img src="image.png" alt="Reservation success" width="400" />
+![Client reservation page](images/image-6.png)
+![Client reservation page 2](images/image-4.png)
+<img src="images/image.png" alt="Reservation success" width="400" />
 
 **Admin panel**
-![Admin panel](image-5.png)
+![Admin panel](images/image-5.png)
