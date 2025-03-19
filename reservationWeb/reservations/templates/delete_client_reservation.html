@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ištrinti Kliento Rezervaciją</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header class="page-header">
+        <h1>MANOMEDELYNAS.LT</h1>
+        <a href="{% url 'admin_reservations' %}" class="back-btn">Grįžti į Rezervacijų Sąrašą</a>
+    </header>
+
+    <div class="page-title">
+        <h2>IŠTRINTI KLIENTO REZERVACIJĄ</h2>
+    </div>
+    
+    <div class="reservation-container">
+        <div class="form-card delete-confirmation">
+            <div class="warning-icon">⚠️</div>
+            <p class="confirmation-message">Ar tikrai norite ištrinti kliento <strong>{{ client.client_name }} {{ client.client_last_name }}</strong> rezervaciją {{ client.reservation.get_municipality_display }} mieste, {{ client.reservation.date|date:"Y-m-d" }} dieną?</p>
+            
+            <div class="client-details">
+                <h3>Kliento informacija:</h3>
+                <ul>
+                    <li><strong>Vardas Pavardė:</strong> {{ client.client_name }} {{ client.client_last_name }}</li>
+                    <li><strong>Telefono numeris:</strong> {{ client.phone_number }}</li>
+                    <li><strong>Adresas:</strong> {{ client.address }}</li>
+                    <li><strong>Pasirinktas laikas:</strong> 
+                        {% if client.selected_time == 'contact_me' %}
+                            Dėl laiko susisieksime
+                        {% else %}
+                            {{ client.selected_time }}
+                        {% endif %}
+                    </li>
+                    <li><strong>Augalų skaičius:</strong> {{ client.trees_count }}</li>
+                    <li><strong>Augalai iki 4m:</strong> {% if client.trees_under_4m %}Taip{% else %}Ne{% endif %}</li>
+                    <li><strong>Paslaugos planas:</strong> {{ client.get_service_plan_display }}</li>
+                    <li><strong>Suma:</strong> {{ client.total_price }}€</li>
+                </ul>
+            </div>
+            
+            <form method="post" class="delete-form">
+                {% csrf_token %}
+                <div class="action-buttons">
+                    <a href="{% url 'admin_reservations' %}" class="btn btn-secondary">Atšaukti</a>
+                    <button type="submit" class="btn btn-delete">Ištrinti</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; {% now "Y" %} MANOMEDELYNAS.LT. 
+                <span>Visos teisės saugomos.</span>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .delete-confirmation {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        
+        .warning-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #e74c3c;
+        }
+        
+        .confirmation-message {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .client-details {
+            background-color: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .client-details h3 {
+            margin-top: 0;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        .client-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .client-details li {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .client-details li:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+        
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .action-buttons a, 
+            .action-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

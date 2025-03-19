@@ -1,0 +1,335 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="lt">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Redaguoti Kliento Rezervaciją</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+        <style>
+            /* Plan options and related styles */
+            .reservation-plans {
+                margin-top: 20px;
+                padding: 15px;
+                background-color: var(--bg-card);
+                border-radius: var(--border-radius);
+            }
+            
+            .reservation-plans h3 {
+                margin-bottom: 15px;
+                color: var(--accent);
+                display: flex;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            
+            .info-link {
+                display: inline-flex;
+                align-items: center;
+                color: var(--text);
+                text-decoration: none;
+                transition: transform 0.2s;
+            }
+            
+            .info-link:hover {
+                transform: scale(1.02);
+            }
+            
+            .info-text {
+                font-size: 0.8rem;
+                color: var(--accent);
+                text-decoration: underline;
+                margin-left: 8px;
+                font-weight: normal;
+            }
+            
+            .info-link:hover .info-text {
+                color: var(--accent-dark);
+            }
+            
+            .plan-options {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .plan-option {
+                position: relative;
+            }
+            
+            .plan-option input[type="radio"] {
+                position: absolute;
+                opacity: 0;
+            }
+            
+            .plan-option label {
+                display: flex;
+                align-items: center;
+                padding: 12px;
+                background-color: var(--bg-card);
+                border: 2px solid transparent;
+                border-radius: var(--border-radius);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            
+            .plan-option input[type="radio"]:checked + label {
+                border-color: var(--accent);
+                background-color: rgba(76, 175, 80, 0.1);
+            }
+            
+            .plan-icon-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                margin-right: 12px;
+                flex-shrink: 0;
+            }
+            
+            .plan-icon {
+                position: static;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+            }
+            
+            .circle-icon {
+                display: block;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            
+            .plan-option-details {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .plan-option-details strong {
+                margin-bottom: 4px;
+            }
+            
+            .plan-price {
+                font-size: 0.8rem;
+                color: var(--accent);
+            }
+            
+            .plant-quantity {
+                display: flex;
+                align-items: center;
+                margin-bottom: 15px;
+            }
+            
+            .plant-quantity label {
+                margin-right: 10px;
+            }
+            
+            .quantity-controls {
+                display: flex;
+                align-items: center;
+            }
+            
+            .quantity-btn {
+                width: 30px;
+                height: 30px;
+                background-color: var(--primary);
+                color: var(--text);
+                border: none;
+                border-radius: 4px;
+                font-size: 1.2rem;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            }
+            
+            .quantity-btn:hover {
+                background-color: var(--accent);
+            }
+            
+            #plant-count {
+                width: 50px;
+                text-align: center;
+                margin: 0 10px;
+            }
+            
+            .total-price {
+                margin-top: 15px;
+                font-size: 1.1rem;
+            }
+            
+            #total-price-value {
+                color: var(--accent);
+                font-size: 1.3rem;
+            }
+        </style>
+    </head>
+<body>
+    <header class="page-header">
+        <h1>MANOMEDELYNAS.LT</h1>
+        <a href="{% url 'admin_reservations' %}" class="back-btn">Grįžti į Rezervacijų Sąrašą</a>
+    </header>
+
+    <div class="page-title">
+        <h2>REDAGUOTI KLIENTO REZERVACIJĄ</h2>
+    </div>
+    
+    <div class="reservation-container">
+        <div class="form-card">
+            <div class="reservation-instructions">
+                <p>Redaguojate rezervaciją klientui {{ client.client_name }} {{ client.client_last_name }} datai {{ reservation.date|date:"Y-m-d" }} {{ reservation.get_municipality_display }} rajone.</p>
+            </div>
+            
+            {% if messages %}
+            <div id="message-container" class="message-container">
+                {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    <span class="message-icon">{% if message.tags == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                    <span class="message-text">{{ message }}</span>
+                    <button class="close-message" onclick="this.parentElement.style.display='none';">×</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" class="reservation-form" id="reservation-form">
+                {% csrf_token %}
+                <div class="form-fields">
+                    {% for field in form %}
+                        {% if field.name != 'service_plan' and field.name != 'trees_count' %}
+                            <div class="form-field {% if field.name == 'trees_under_4m' %}checkbox-field{% endif %}">
+                                {% if field.name == 'selected_time' %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    <div class="field-help">Nelikus laisvų laikų, susisieksime</div>
+                                {% elif field.name == 'trees_under_4m' %}
+                                    <div class="checkbox-wrapper">
+                                        {{ field }}
+                                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    </div>
+                                {% else %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                {% endif %}
+                                
+                                {% if field.help_text %}
+                                    <div class="field-help">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <span class="error-message">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="reservation-plans">
+                    <h3>
+                        Paslaugos planas: 
+                        <a href="{% url 'service_plans' %}" class="info-link" title="Daugiau informacijos apie planus">
+                            <span class="info-text">Platesnė informacija apie planus</span>
+                        </a>
+                    </h3>
+                    <div class="plan-options">
+                        <div class="plan-option">
+                            <input type="radio" name="service_plan" id="plan-basic" value="basic" {% if form.service_plan.value != 'premium' %}checked{% endif %}>
+                            <label for="plan-basic">
+                                <div class="plan-icon-container">
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #87CEEB;"></span>
+                                    </span>
+                                </div>
+                                <div class="plan-option-details">
+                                    <strong>"Augalo Startas"</strong>
+                                    <span class="plan-price">20€ už augalą</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="plan-option">
+                            <input type="radio" name="service_plan" id="plan-premium" value="premium" {% if form.service_plan.value == 'premium' %}checked{% endif %}>
+                            <label for="plan-premium">
+                                <div class="plan-icon-container">
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #003366;"></span>
+                                    </span>
+                                </div>
+                                <div class="plan-option-details">
+                                    <strong>"Augalo Ilgalaikis"</strong>
+                                    <span class="plan-price">25€ už augalą</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="plant-quantity">
+                        <label for="plant-count">Augalų skaičius:</label>
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus">-</button>
+                            <input type="number" id="plant-count" name="trees_count" value="{{ form.trees_count.value|default:1 }}" min="1" max="20">
+                            <button type="button" class="quantity-btn plus">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="total-price">
+                        <span>Galutinė kaina: <strong id="total-price-value">{{ client.total_price }}€</strong></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-accent" id="submit-btn">Išsaugoti Pakeitimus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle quantity buttons
+            $('.quantity-btn.plus').click(function() {
+                var input = $(this).siblings('input[type="number"]');
+                var val = parseInt(input.val()) || 0;
+                input.val(Math.min(val + 1, 20));
+                updatePrice();
+            });
+            
+            $('.quantity-btn.minus').click(function() {
+                var input = $(this).siblings('input[type="number"]');
+                var val = parseInt(input.val()) || 0;
+                input.val(Math.max(val - 1, 1));
+                updatePrice();
+            });
+            
+            // Update price when changing quantity or plan
+            $('#plant-count, input[name="service_plan"]').on('change', function() {
+                updatePrice();
+            });
+            
+            // Calculate and update price
+            function updatePrice() {
+                var count = parseInt($('#plant-count').val()) || 1;
+                var price = $('input[name="service_plan"]:checked').val() === 'premium' ? 25 : 20;
+                var total = count * price;
+                $('#total-price-value').text(total + '€');
+            }
+            
+            // Auto-hide messages after 5 seconds
+            setTimeout(function() {
+                $('.message').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

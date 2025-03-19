@@ -1,82 +1,102 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from .models import Reservation, ClientReservation, Municipality
-from django.db.models import Sum, F, DecimalField
+from django.db.models import Sum
 from .forms import ReservationForm, ClientReservationForm
 from django.http import JsonResponse
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db.models import Count
 from django.utils import timezone
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.urls import reverse_lazy
 
 
-def index(request):
-    return render(request, 'index.html')
+class IndexView(TemplateView):
+    template_name = 'index.html'
 
-def reservations(request):
-    reservations_data = Reservation.objects.all()
-    data = {
-        'reservations': [
-            {
-                'id': reservation.id,
-                'date': reservation.date,
-                'municipality': reservation.municipality,  # Code
-                'municipality_name': reservation.get_municipality_display()  # Full name
-            }
-            for reservation in reservations_data
-        ]
-    }
-    return JsonResponse(data)
 
-@login_required
-def add_reservation(request):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'You do not have permission to add reservations.'}, status=403)
+class ReservationsAPIView(View):
+    def get(self, request):
+        reservations_data = Reservation.objects.all()
+        data = {
+            'reservations': [
+                {
+                    'id': reservation.id,
+                    'date': reservation.date,
+                    'municipality': reservation.municipality,  # Code
+                    'municipality_name': reservation.get_municipality_display()  # Full name
+                }
+                for reservation in reservations_data
+            ]
+        }
+        return JsonResponse(data)
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class ReservationCreateView(CreateView):
+    model = Reservation
+    form_class = ReservationForm
+    template_name = 'add_reservation.html'
+    success_url = reverse_lazy('index')
     
-    if request.method == 'POST':
-        form = ReservationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-    else:
-        form = ReservationForm()
-    
-    return render(request, 'add_reservation.html', {'form': form})
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return JsonResponse({'error': 'You do not have permission to add reservations.'}, status=403)
+        return super().dispatch(request, *args, **kwargs)
 
-@login_required
-def edit_reservation(request, reservation_id):
-    reservation = get_object_or_404(Reservation, id=reservation_id)
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'You do not have permission to edit reservations.'}, status=403)
-    
-    if request.method == 'POST':
-        form = ReservationForm(request.POST, instance=reservation)
-        if form.is_valid():
-            form.save()
-            return redirect('index')
-    else:
-        form = ReservationForm(instance=reservation)
-    
-    return render(request, 'edit_reservation.html', {'form': form, 'reservation': reservation})
 
-@login_required
-def delete_reservation(request, reservation_id):
-    reservation = get_object_or_404(Reservation, id=reservation_id)
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'You do not have permission to delete reservations.'}, status=403)
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class ReservationUpdateView(UpdateView):
+    model = Reservation
+    form_class = ReservationForm
+    template_name = 'edit_reservation.html'
+    pk_url_kwarg = 'reservation_id'
+    success_url = reverse_lazy('index')
     
-    if request.method == 'POST':
-        reservation.delete()
-        return redirect('index')
-    
-    return render(request, 'delete_reservation.html', {'reservation': reservation})
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return JsonResponse({'error': 'You do not have permission to edit reservations.'}, status=403)
+        return super().dispatch(request, *args, **kwargs)
 
-def create_client_reservation(request, reservation_id):
-    reservation = get_object_or_404(Reservation, id=reservation_id)
-    if request.method == 'POST':
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['reservation'] = self.object
+        return context
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class ReservationDeleteView(DeleteView):
+    model = Reservation
+    template_name = 'delete_reservation.html'
+    pk_url_kwarg = 'reservation_id'
+    success_url = reverse_lazy('index')
+    context_object_name = 'reservation'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return JsonResponse({'error': 'You do not have permission to delete reservations.'}, status=403)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ClientReservationCreateView(View):
+    template_name = 'create_client_reservation.html'
+    
+    def get(self, request, reservation_id):
+        reservation = get_object_or_404(Reservation, id=reservation_id)
+        form = ClientReservationForm(reservation=reservation)
+        return render(request, self.template_name, {'form': form, 'reservation': reservation})
+    
+    def post(self, request, reservation_id):
+        reservation = get_object_or_404(Reservation, id=reservation_id)
         form = ClientReservationForm(request.POST, reservation=reservation)
+        
         if form.is_valid():
             client_reservation = form.save(commit=False)
             client_reservation.reservation = reservation
@@ -107,121 +127,200 @@ def create_client_reservation(request, reservation_id):
                     "price": float(client_reservation.total_price)
                 })
             return redirect('index')
-    else:
-        form = ClientReservationForm(reservation=reservation)
-    
-    return render(request, 'create_client_reservation.html', {'form': form, 'reservation': reservation})
+            
+        return render(request, self.template_name, {'form': form, 'reservation': reservation})
 
 
-@login_required
-def municipality_detail(request, municipality_id):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'You do not have permission to view this information.'}, status=403)
-    
-    reservations = Reservation.objects.filter(municipality=municipality_id)
-    data = {
-        'reservations': list(reservations.values('date', 'municipality'))
-    }
-    return JsonResponse(data)
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class MunicipalityDetailAPIView(View):
+    def get(self, request, municipality_id):
+        reservations = Reservation.objects.filter(municipality=municipality_id)
+        data = {
+            'reservations': list(reservations.values('date', 'municipality'))
+        }
+        return JsonResponse(data)
 
-@login_required
-def date_detail(request, reservation_date):
-    if not request.user.is_superuser:
-        return JsonResponse({'error': 'You do not have permission to view this information.'}, status=403)
-    
-    reservations = Reservation.objects.filter(date=reservation_date)
-    reservation_details = []
-    for reservation in reservations:
-        clients = ClientReservation.objects.filter(reservation=reservation)
-        client_details = list(clients.values('client_name', 'client_last_name', 'address', 'phone_number', 'trees_count', 'additional_comments', 'trees_under_4m', 'selected_time'))
-        reservation_details.append({
-            'id': reservation.id,
-            'date': reservation.date,
-            'municipality': reservation.get_municipality_display(),
-            'clients': client_details,
-            'is_superuser': request.user.is_superuser
-        })
-    return JsonResponse({'reservations': reservation_details})
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class DateDetailAPIView(View):
+    def get(self, request, reservation_date):
+        reservations = Reservation.objects.filter(date=reservation_date)
+        reservation_details = []
+        for reservation in reservations:
+            clients = ClientReservation.objects.filter(reservation=reservation)
+            client_details = list(clients.values(
+                'client_name', 'client_last_name', 'address', 'phone_number', 
+                'trees_count', 'additional_comments', 'trees_under_4m', 'selected_time'
+            ))
+            reservation_details.append({
+                'id': reservation.id,
+                'date': reservation.date,
+                'municipality': reservation.get_municipality_display(),
+                'clients': client_details,
+                'is_superuser': request.user.is_superuser
+            })
+        return JsonResponse({'reservations': reservation_details})
+
 
 class CustomLoginView(LoginView):
     template_name = 'login.html'
 
 
-def service_plans(request):
-    """View for displaying service plans"""
-    return render(request, 'service_plans.html')
+class ServicePlansView(TemplateView):
+    template_name = 'service_plans.html'
 
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def admin_reservations(request):
-    """View for admin to see all client reservations"""
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class AdminReservationsView(ListView):
+    template_name = 'admin_reservations.html'
+    context_object_name = 'reservations'
+    paginate_by = 10
     
-    # Get filter parameters from request
-    date_range = request.GET.get('date_range', 'upcoming')
-    municipality_filter = request.GET.get('municipality', 'all')
+    def get_queryset(self):
+        # Get filter parameters from request
+        date_range = self.request.GET.get('date_range', 'upcoming')
+        municipality_filter = self.request.GET.get('municipality', 'all')
+        
+        # Base query
+        reservations = Reservation.objects.all().prefetch_related('clients')
+        
+        # Apply date filters
+        today = timezone.now().date()
+        if date_range == 'upcoming':
+            reservations = reservations.filter(date__gte=today)
+        elif date_range == 'past':
+            reservations = reservations.filter(date__lt=today)
+        elif date_range == 'today':
+            reservations = reservations.filter(date=today)
+        elif date_range == 'week':
+            end_of_week = today + timedelta(days=(6-today.weekday()))
+            reservations = reservations.filter(date__gte=today, date__lte=end_of_week)
+        elif date_range == 'month':
+            next_month = today.replace(day=1, month=today.month+1) if today.month < 12 else today.replace(day=1, month=1, year=today.year+1)
+            reservations = reservations.filter(date__gte=today, date__lt=next_month)
+        
+        # Apply municipality filter
+        if municipality_filter != 'all':
+            reservations = reservations.filter(municipality=municipality_filter)
+        
+        # Calculate totals for each reservation
+        for reservation in reservations:
+            reservation.total_sum = sum(float(client.total_price) for client in reservation.clients.all())
+        
+        # Order by date (newest first, then by municipality name)
+        return reservations.order_by('date', 'municipality')
     
-    # Base query
-    reservations = Reservation.objects.all().prefetch_related('clients')
-    
-    # Apply date filters
-    today = timezone.now().date()
-    if date_range == 'upcoming':
-        reservations = reservations.filter(date__gte=today)
-    elif date_range == 'past':
-        reservations = reservations.filter(date__lt=today)
-    elif date_range == 'today':
-        reservations = reservations.filter(date=today)
-    elif date_range == 'week':
-        end_of_week = today + timedelta(days=(6-today.weekday()))
-        reservations = reservations.filter(date__gte=today, date__lte=end_of_week)
-    elif date_range == 'month':
-        next_month = today.replace(day=1, month=today.month+1) if today.month < 12 else today.replace(day=1, month=1, year=today.year+1)
-        reservations = reservations.filter(date__gte=today, date__lt=next_month)
-    
-    # Apply municipality filter
-    if municipality_filter != 'all':
-        reservations = reservations.filter(municipality=municipality_filter)
-    
-    # Calculate totals for each reservation
-    for reservation in reservations:
-        reservation.total_sum = sum(float(client.total_price) for client in reservation.clients.all())
-    
-    # Order by date (newest first, then by municipality name)
-    reservations = reservations.order_by('date', 'municipality')
-    
-    # Calculate statistics
-    total_reservations = Reservation.objects.count()
-    upcoming_reservations = Reservation.objects.filter(date__gte=today).count()
-    todays_reservations = Reservation.objects.filter(date=today).count()
-    total_clients = ClientReservation.objects.count()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.now().date()
+        
+        # Calculate statistics
+        context['total_reservations'] = Reservation.objects.count()
+        context['upcoming_reservations'] = Reservation.objects.filter(date__gte=today).count()
+        context['todays_reservations'] = Reservation.objects.filter(date=today).count()
+        context['total_clients'] = ClientReservation.objects.count()
+        
+        # Calculate total revenue
+        total_revenue = ClientReservation.objects.aggregate(
+            total=Sum('total_price')
+        )['total'] or 0
+        
+        # Format for display
+        context['total_revenue'] = int(total_revenue) if total_revenue == int(total_revenue) else total_revenue
+        
+        # Get list of municipalities for filter dropdown
+        context['municipalities'] = [(code, name) for code, name in Municipality.choices]
+        
+        return context
 
-    # Calculate total revenue
-    total_revenue = ClientReservation.objects.aggregate(
-        total=Sum('total_price')  # Use Sum instead of models.Sum
-    )['total'] or 0
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class ClientReservationUpdateView(View):
+    template_name = 'edit_client_reservation.html'
     
-    # Format for display
-    total_revenue = int(total_revenue) if total_revenue == int(total_revenue) else total_revenue
+    def get(self, request, client_id):
+        client_reservation = get_object_or_404(ClientReservation, id=client_id)
+        reservation = client_reservation.reservation
+        form = ClientReservationForm(instance=client_reservation, reservation=reservation)
+        
+        return render(request, self.template_name, {
+            'form': form, 
+            'client': client_reservation,
+            'reservation': reservation
+        })
     
-    # Get list of municipalities for filter dropdown
-    municipalities = [(code, name) for code, name in Municipality.choices]
+    def post(self, request, client_id):
+        client_reservation = get_object_or_404(ClientReservation, id=client_id)
+        reservation = client_reservation.reservation
+        original_time = client_reservation.selected_time
+        
+        form = ClientReservationForm(request.POST, instance=client_reservation, reservation=reservation)
+        if form.is_valid():
+            # Get the new selected time before saving
+            new_time = form.cleaned_data['selected_time']
+            
+            # Handle time slot availability updates
+            if original_time != new_time:
+                # If original time was not 'contact_me', add it back to available times
+                if original_time != 'contact_me' and original_time not in reservation.available_times:
+                    if isinstance(reservation.available_times, list):
+                        reservation.available_times.append(original_time)
+                    else:
+                        # Handle case where available_times is a string
+                        times = reservation.available_times.split(',') if isinstance(reservation.available_times, str) else []
+                        times.append(original_time)
+                        reservation.available_times = ','.join(times)
+                
+                # If new time is not 'contact_me', remove it from available times
+                if new_time != 'contact_me' and new_time in reservation.available_times:
+                    if isinstance(reservation.available_times, list):
+                        reservation.available_times.remove(new_time)
+                    else:
+                        # Handle case where available_times is a string
+                        times = reservation.available_times.split(',') if isinstance(reservation.available_times, str) else []
+                        if new_time in times:
+                            times.remove(new_time)
+                        reservation.available_times = ','.join(times)
+                
+                # Save the reservation with updated available times
+                reservation.save()
+            
+            # Save the client reservation
+            form.save()
+            
+            messages.success(request, 'Kliento rezervacija sėkmingai atnaujinta!')
+            return redirect('admin_reservations')
+            
+        return render(request, self.template_name, {
+            'form': form, 
+            'client': client_reservation,
+            'reservation': reservation
+        })
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(user_passes_test(lambda u: u.is_superuser), name='dispatch')
+class ClientReservationDeleteView(View):
+    template_name = 'delete_client_reservation.html'
     
-    # Set up pagination
-    paginator = Paginator(reservations, 10)  # 10 reservations per page
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
+    def get(self, request, client_id):
+        client_reservation = get_object_or_404(ClientReservation, id=client_id)
+        return render(request, self.template_name, {'client': client_reservation})
     
-    context = {
-        'reservations': page_obj,
-        'municipalities': municipalities,
-        'total_reservations': total_reservations,
-        'upcoming_reservations': upcoming_reservations,
-        'todays_reservations': todays_reservations,
-        'total_clients': total_clients,
-        'total_revenue': total_revenue,  # Add this to context
-        'is_paginated': page_obj.has_other_pages(),
-        'page_obj': page_obj,
-    }
-    
-    return render(request, 'admin_reservations.html', context)
+    def post(self, request, client_id):
+        client_reservation = get_object_or_404(ClientReservation, id=client_id)
+        
+        # If time was taken up, add it back to available times
+        if client_reservation.selected_time != 'contact_me':
+            reservation = client_reservation.reservation
+            if client_reservation.selected_time not in reservation.available_times:
+                reservation.available_times.append(client_reservation.selected_time)
+                reservation.save()
+        
+        client_reservation.delete()
+        messages.success(request, 'Kliento rezervacija sėkmingai ištrinta!')
+        return redirect('admin_reservations')

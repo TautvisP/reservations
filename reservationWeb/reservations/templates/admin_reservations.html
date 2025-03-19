@@ -115,6 +115,7 @@
                                     <th>Kaina/vnt</th>
                                     <th>Suma</th>
                                     <th>Komentarai</th>
+                                    <th>Veiksmai</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -146,6 +147,10 @@
                                     <td>{{ client.price_per_tree }}€</td>
                                     <td class="price-cell">{{ client.total_price }}€</td>
                                     <td>{{ client.additional_comments|default:"-" }}</td>
+                                    <td class="client-actions">
+                                        <a href="{% url 'edit_client_reservation' client.id %}" class="btn btn-sm">Redaguoti</a>
+                                        <a href="{% url 'delete_client_reservation' client.id %}" class="btn btn-sm btn-secondary">Ištrinti</a>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -159,7 +164,7 @@
                                     <td class="price-cell total-price">
                                         {{ total_revenue }}€
                                     </td>
-                                    <td></td>
+                                    <td colspan="2"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -280,7 +285,16 @@
             font-size: 1.2rem;
             font-weight: 500;
         }
-        
+
+        .client-actions {
+            white-space: nowrap;
+            text-align: center;
+        }
+                
+        .client-actions .btn-sm {
+            padding: 2px 6px;
+            font-size: 0.7rem;
+        }
         /* Filter styles */
         .filter-form {
             display: grid;
@@ -397,7 +411,7 @@
         }
         
         .btn-sm {
-            padding: 4px 8px;
+            padding: 6px 10px;
             font-size: 0.75rem;
         }
         
