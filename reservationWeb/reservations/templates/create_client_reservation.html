@@ -1,31 +1,691 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Client Reservation</title>
+    <title>Rezervacijos sukūrimas</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="container">
-        <div class="form-container">
-            <h1>Create Client Reservation</h1>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Submit Reservation</button>
-            </form>
-        </div>
-        <div class="calendar-container">
-            <div id="calendar"></div>
-        </div>
-    </div>
+    <header class="page-header">
+        <h1>MANOMEDELYNAS.LT</h1>
+        <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
+    </header>
 
+    <div class="page-title reservation-title">
+        <h2>SUKURTI REZERVACIJĄ</h2>
+    </div>
+    
+    <div class="reservation-container">
+        <div class="form-card">
+            <div class="reservation-instructions">
+                <p>Užpildykite formą žemiau, kad užrezervuotumėte paslaugą {{ reservation.date|date:"Y-m-d" }} datai. Paslaugos bus teikiamos {{ reservation.get_municipality_display }} rajone.</p>
+            </div>
+            
+            {% if messages %}
+            <div id="message-container" class="message-container">
+                {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    <span class="message-icon">{% if message.tags == 'success' %}✓{% else %}ℹ️{% endif %}</span>
+                    <span class="message-text">{{ message }}</span>
+                    <button class="close-message" onclick="this.parentElement.style.display='none';">×</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" class="reservation-form" id="reservation-form">
+                {% csrf_token %}
+                <div class="form-fields">
+                    {% for field in form %}
+                        {% if field.name != 'service_plan' and field.name != 'trees_count' %}
+                            <div class="form-field {% if field.name == 'trees_under_4m' %}checkbox-field{% endif %}">
+                                {% if field.name == 'selected_time' %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    <div class="field-help">Nelikus laisvų laikų, susisieksime</div>
+                                {% elif field.name == 'trees_under_4m' %}
+                                    <div class="checkbox-wrapper">
+                                        {{ field }}
+                                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    </div>
+                                {% else %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                {% endif %}
+                                
+                                {% if field.help_text %}
+                                    <div class="field-help">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="field-errors">
+                                        {% for error in field.errors %}
+                                            <span class="error-message">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <div class="reservation-plans">
+                    <h3>
+                        Pasirinkite paslaugų planą: 
+                        <a href="{% url 'service_plans' %}" class="info-link" title="Daugiau informacijos apie planus">
+                            <span class="info-text">Platesnė informacija apie planus</span>
+                        </a>
+                    </h3>
+                    <div class="plan-options">
+                        <div class="plan-option">
+                            <input type="radio" name="service_plan" id="plan-basic" value="basic" {% if form.service_plan.value != 'premium' %}checked{% endif %}>
+                            <label for="plan-basic">
+                                <div class="plan-icon-container">
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #87CEEB;"></span>
+                                    </span>
+                                </div>
+                                <div class="plan-option-details">
+                                    <strong>"Augalo Startas"</strong>
+                                    <span class="plan-price">20€ už augalą iki 3 metrų aukščio</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="plan-option">
+                            <input type="radio" name="service_plan" id="plan-premium" value="premium" {% if form.service_plan.value == 'premium' %}checked{% endif %}>
+                            <label for="plan-premium">
+                                <div class="plan-icon-container">
+                                    <span class="plan-icon">
+                                        <span class="circle-icon" style="background-color: #003366;"></span>
+                                    </span>
+                                </div>
+                                <div class="plan-option-details">
+                                    <strong>"Augalo Ilgalaikis"</strong>
+                                    <span class="plan-price">25€ už augalą iki 3 metrų aukščio</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="plant-quantity">
+                        <label for="plant-count">Augalų skaičius:</label>
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn minus">-</button>
+                            <input type="number" id="plant-count" name="trees_count" value="{{ form.trees_count.value|default:1 }}" min="1" max="20">
+                            <button type="button" class="quantity-btn plus">+</button>
+                        </div>
+                    </div>
+                    <div class="total-price">
+                        <span>Galutinė kaina: <strong id="total-price-value">20€</strong></span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-accent" id="submit-btn">Patvirtinti Rezervaciją</button>
+                </div>
+            </form>
+            
+            <!-- Success Modal -->
+            <div id="success-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="success-icon">✓</span>
+                        <h3>Rezervacija sėkmingai sukurta!</h3>
+                    </div>
+                    <div class="modal-body">
+                        <p>Jūsų rezervacija buvo sėkmingai užregistruota. Netrukus su jumis susisieksime</p>
+                        <p class="reservation-details">
+                            <strong>Data:</strong> <span id="res-date">{{ reservation.date|date:"Y-m-d" }}</span><br>
+                            <strong>Laikas:</strong> <span id="res-time"></span><br>
+                            <strong>Miestas:</strong> <span id="res-city">{{ reservation.get_municipality_display }}</span><br>
+                            <strong>Paslaugos planas:</strong> <span id="res-plan"></span><br>
+                            <strong>Kaina:</strong> <span id="res-price"></span>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{% url 'index' %}" class="btn btn-accent">Grįžti į Kalendorių</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/lt.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script src="{% static 'js/calendar.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            // Nustatyti lietuvių kalbą momentjs bibliotekai
+            moment.locale('lt');
+            
+            // Update the function to use trees_count instead of plant_count
+            function updateTotalPrice() {
+                const planPrice = $('input[name="service_plan"]:checked').val() === 'premium' ? 25 : 20;
+                const quantity = parseInt($('#plant-count').val());
+                const totalPrice = planPrice * quantity;
+                $('#total-price-value').text(totalPrice + '€');
+                return totalPrice;
+            }
+            
+            // Initialize the total price on page load
+            updateTotalPrice();
+            
+            // Existing event listeners, but update to use correct IDs
+            $('input[name="service_plan"]').change(function() {
+                updateTotalPrice();
+            });
+            
+            $('#plant-count').on('input', function() {
+                updateTotalPrice();
+            });
+            
+            $('.quantity-btn.plus').click(function() {
+                const currentVal = parseInt($('#plant-count').val());
+                $('#plant-count').val(Math.min(currentVal + 1, 20));
+                updateTotalPrice();
+            });
+            
+            $('.quantity-btn.minus').click(function() {
+                const currentVal = parseInt($('#plant-count').val());
+                $('#plant-count').val(Math.max(currentVal - 1, 1));
+                updateTotalPrice();
+            });
+            
+            // Pakeisti formos laukų etiketes į lietuvių kalbą
+            $('label[for="id_client_name"]').text('Vardas:');
+            $('label[for="id_client_last_name"]').text('Pavardė:');
+            $('label[for="id_phone_number"]').text('Telefono numeris:');
+            $('label[for="id_selected_time"]').text('Pasirinktas laikas:');
+            
+            // Pakeisti formos laukų placeholder tekstus į lietuvių kalbą
+            $('input[name="client_name"]').attr('placeholder', 'Įveskite vardą');
+            $('input[name="client_last_name"]').attr('placeholder', 'Įveskite pavardę');
+            $('input[name="phone_number"]').attr('placeholder', '+3706XXXXXXX');
+            $('select[name="selected_time"]').find('option:first').text('Pasirinkite laiką');
+            
+            // Form submission handling to show success modal
+            $('#reservation-form').on('submit', function(e) {
+                // We'll validate the form first
+                const isValid = validateForm();
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // If JavaScript is enabled, show our custom modal
+                e.preventDefault();
+                
+                // Fill the modal with reservation details
+                const selectedTime = $('#id_selected_time').val();
+                const planType = $('input[name="service_plan"]:checked').val();
+                const planName = planType === 'premium' ? '"Augalo Ilgalaikis"' : '"Augalo Startas"';
+                const plantCount = $('#plant-count').val();
+                const totalPrice = updateTotalPrice();
+                
+                $('#res-time').text(selectedTime);
+                $('#res-plan').text(`${planName} (${plantCount} ${getPlantText(plantCount)})`);
+                $('#res-price').text(`${totalPrice}€`);
+                
+                // Show modal
+                $('#success-modal').addClass('show');
+                
+                // Now actually submit the form via AJAX
+                const formData = $(this).serialize();
+                
+                $.ajax({
+                    type: 'POST',
+                    url: window.location.href,
+                    data: formData,
+                    success: function(response) {
+                        // Modal is already showing
+                        console.log('Reservation created successfully');
+                    },
+                    error: function(xhr, status, error) {
+                        // Hide modal and show error
+                        $('#success-modal').removeClass('show');
+                        alert('Įvyko klaida kuriant rezervaciją. Bandykite dar kartą.');
+                        console.error(error);
+                    }
+                });
+            });
+            
+            function validateForm() {
+                let isValid = true;
+                
+                // Required fields
+                const requiredFields = [
+                    '#id_client_name', 
+                    '#id_client_last_name', 
+                    '#id_phone_number',
+                    '#id_selected_time'
+                ];
+                
+                // Clear previous error messages
+                $('.validation-error').remove();
+                
+                // Check each required field
+                requiredFields.forEach(field => {
+                    const value = $(field).val();
+                    if (!value || value.trim() === '') {
+                        isValid = false;
+                        $(field).after('<div class="validation-error">Šis laukas yra privalomas</div>');
+                        $(field).addClass('error-input');
+                    } else {
+                        $(field).removeClass('error-input');
+                    }
+                });
+                
+                // Validate phone
+                const phone = $('#id_phone_number').val();
+                if (phone && !isValidPhone(phone)) {
+                    isValid = false;
+                    $('#id_phone_number').after('<div class="validation-error">Neteisingas telefono numerio formatas</div>');
+                    $('#id_phone_number').addClass('error-input');
+                }
+                
+                return isValid;
+            }
+            
+            function isValidPhone(phone) {
+                // Basic Lithuanian phone number validation
+                const re = /^(\+370|8)([0-9]{8})$/;
+                return re.test(String(phone).replace(/\s/g, ''));
+            }
+            
+            function getPlantText(count) {
+                if (count === '1') return 'augalas';
+                if (count % 10 === 0) return 'augalų';
+                return 'augalai';
+            }
+            
+            // Auto-hide messages after 5 seconds
+            setTimeout(function() {
+                $('.message').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+    
+    <style>
+        .reservation-instructions {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(76, 175, 80, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .page-title.reservation-title {
+            background-color: var(--accent);
+            padding: 20px 16px;
+            text-align: center;
+        }
+        .page-title.reservation-title h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        
+        .available-times {
+            margin-top: 10px;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+        
+        .selected-date {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+        
+        .reservation-plans {
+            margin: 25px 0;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+        }
+        
+        .info-text {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-decoration: underline;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+
+        .info-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+
+        .info-link:hover {
+            transform: scale(1.02);
+        }
+
+        .info-link:hover .info-text {
+            color: var(--accent-dark);
+        }
+
+        .reservation-plans h3 {
+            margin-bottom: 15px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .info-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        
+        .info-link:hover {
+            transform: scale(1.1);
+        }
+        
+        .info-icon {
+            font-size: 1.3rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .plan-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .plan-option {
+            position: relative;
+        }
+        
+        .plan-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+        
+        .plan-option label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--bg-card);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .plan-option input[type="radio"]:checked + label {
+            border-color: var(--accent);
+            background-color: rgba(76, 175, 80, 0.1);
+        }
+        
+        .plan-icon-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .plan-icon {
+            position: static;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+        }
+
+        .circle-icon {
+            display: block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .plan-option:nth-child(1) .plan-icon,
+        .plan-option:nth-child(2) .plan-icon {
+            color: inherit;
+        }
+        
+        .plan-option-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        .plan-price {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .plant-quantity {
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .quantity-btn {
+            background-color: var(--secondary);
+            color: var(--text);
+            border: none;
+            width: 30px;
+            height: 30px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .quantity-btn:hover {
+            background-color: var(--accent);
+        }
+        
+        #plant-count {
+            width: 50px;
+            text-align: center;
+            margin: 0 5px;
+            padding: 5px;
+        }
+        
+        .total-price {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            text-align: right;
+        }
+        
+        #total-price-value {
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        
+        /* Success Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            animation: modalIn 0.3s ease;
+        }
+        
+        @keyframes modalIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .success-icon {
+            display: block;
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+            line-height: 60px;
+            text-align: center;
+            background-color: rgba(56, 142, 60, 0.2); 
+            color: #4caf50; 
+            border-radius: 50%;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 15px 20px;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .reservation-details {
+            background-color: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            line-height: 1.6;
+        }   
+        
+        .plan-option:nth-child(1) .plan-icon {
+            color: #8bc34a;
+        }
+    
+        .plan-option:nth-child(2) .plan-icon {
+            color: #4caf50;
+        }
+        
+        /* Message Container Styles */
+        .message-container {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.success {
+            background-color: rgba(76, 175, 80, 0.15);
+            border-left: 4px solid #4caf50; 
+        }
+        
+        .message.info {
+            background-color: rgba(56, 142, 60, 0.15);  
+            border-left: 4px solid #388e3c;  
+        }
+        
+        .message.error {
+            background-color: rgba(231, 76, 60, 0.15);
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .message-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .message-text {
+            flex-grow: 1;
+        }
+        
+        .close-message {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+        
+        .close-message:hover {
+            color: var(--text);
+        }
+        
+        /* Form validation styles */
+        .validation-error {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .error-input {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .reservation-container {
+                flex-direction: column;
+            }
+            
+            .calendar-card {
+                margin-top: 30px;
+            }
+        }
+    </style>
 </body>
 </html>

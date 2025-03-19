@@ -1,31 +1,297 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Reservation</title>
+    <title>Redaguoti Rezervaciją</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="container">
-        <div class="form-container">
-            <h1>Edit Reservation</h1>
-            <form method="post">
+    <header class="page-header">
+        <h1>MANOMEDELYNAS.LT</h1>
+        <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
+    </header>
+
+    <div class="page-title">
+        <h2>REDAGUOTI REZERVACIJĄ</h2>
+    </div>
+    
+    <div class="reservation-container">
+        <div class="form-card">
+            <form method="post" class="reservation-form">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Save Changes</button>
+                <div class="form-fields">
+                    {% for field in form %}
+                        <div class="form-field">
+                            <label for="{{ field.id_for_label }}">
+                                {% if field.name == 'municipality' %}
+                                    Miestas
+                                {% elif field.name == 'date' %}
+                                    Data
+                                {% elif field.name == 'available_times' %}
+                                    Galimi laikai
+                                {% else %}
+                                    {{ field.label }}
+                                {% endif %}
+                            </label>
+                            
+                            {% if field.name == 'available_times' %}
+                                <div class="time-checkboxes">
+                                    {% for value, label in field.field.choices %}
+                                        <label for="id_{{ field.name }}_{{ forloop.counter0 }}">
+                                            <input type="checkbox" name="{{ field.name }}" id="id_{{ field.name }}_{{ forloop.counter0 }}" value="{{ value }}"
+                                                {% if value in field.value|default:'' %}checked{% endif %}>
+                                            {{ label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            
+                            {% if field.help_text %}
+                                <div class="field-help">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="field-errors">
+                                    {% for error in field.errors %}
+                                        <span class="error-message">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="form-actions">
+                    <a href="{% url 'index' %}" class="btn btn-secondary">Atšaukti</a>
+                    <button type="submit" class="btn btn-accent">Išsaugoti pakeitimus</button>
+                </div>
             </form>
         </div>
-        <div class="calendar-container">
+        
+        <div class="calendar-card">
+            <div class="calendar-heading">
+                <h3>Rezervacijos data</h3>
+                <p class="calendar-hint">Pasirinkite datą kalendoriuje</p>
+            </div>
             <div id="calendar"></div>
+            
+            {% if clients|length > 0 %}
+            <div class="existing-clients">
+                <h3>Esami klientai</h3>
+                <ul class="clients-list">
+                    {% for client in clients %}
+                        <li>
+                            <span class="client-name">{{ client.client_name }} {{ client.client_last_name }}</span>
+                            <span class="client-time">{{ client.selected_time }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
     </div>
 
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; {% now "Y" %} MANOMEDELYNAS.LT. 
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="hidden-admin-link">Visos teisės saugomos.</a>
+                {% else %}
+                    <span>Visos teisės saugomos.</span>
+                {% endif %}
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/lt.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
-    <script src="{% static 'js/calendar.js' %}"></script>
+    <script>
+        $(document).ready(function() {
+            // Set moment.js locale to Lithuanian
+            moment.locale('lt');
+            
+            // Get the current date from the form
+            const currentDate = $('#id_date').val() || moment().format('YYYY-MM-DD');
+            
+            // Initialize calendar with Lithuanian settings
+            $('#calendar').fullCalendar({
+                locale: 'lt',
+                header: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'today'
+                },
+                height: 350,
+                defaultDate: currentDate,
+                buttonText: {
+                    today: 'Šiandien',
+                    month: 'Mėnuo',
+                    week: 'Savaitė',
+                    day: 'Diena'
+                },
+                monthNames: ['Sausis', 'Vasaris', 'Kovas', 'Balandis', 'Gegužė', 'Birželis', 'Liepa', 'Rugpjūtis', 'Rugsėjis', 'Spalis', 'Lapkritis', 'Gruodis'],
+                monthNamesShort: ['Sau', 'Vas', 'Kov', 'Bal', 'Geg', 'Bir', 'Lie', 'Rgp', 'Rgs', 'Spa', 'Lap', 'Grd'],
+                dayNames: ['Sekmadienis', 'Pirmadienis', 'Antradienis', 'Trečiadienis', 'Ketvirtadienis', 'Penktadienis', 'Šeštadienis'],
+                dayNamesShort: ['Sek', 'Pir', 'Ant', 'Tre', 'Ket', 'Pen', 'Šeš'],
+                firstDay: 1,
+                eventColor: '#3498db',
+                selectable: true,
+                select: function(start) {
+                    // Update the date field when a day is clicked
+                    $('#id_date').val(start.format('YYYY-MM-DD'));
+                },
+                events: [{
+                    title: '{{ form.instance.get_municipality_display }}',
+                    start: currentDate
+                }]
+            });
+            
+            // Add dark theme styling to calendar
+            function applyCalendarStyles() {
+                $('.fc-widget-header').css('background-color', 'var(--primary)');
+                $('.fc-widget-header').css('color', 'var(--text)');
+                $('.fc-widget-content').css('background-color', 'var(--bg-card)');
+                $('.fc-widget-content').css('color', 'var(--text)');
+                $('.fc-button').css({
+                    'background-color': 'var(--secondary)',
+                    'color': 'var(--text)',
+                    'border': 'none',
+                    'text-shadow': 'none',
+                    'box-shadow': 'none'
+                });
+                $('.fc-button:hover').css('background-color', 'var(--accent)');
+                
+                // Fix today's cell styling
+                $('.fc-today').css({
+                    'background-color': 'rgba(52, 152, 219, 0.1)',
+                    'opacity': '1'
+                });
+            }
+            
+            // Apply styles initially
+            applyCalendarStyles();
+            
+            // Re-apply styles after view render to ensure today's styling is maintained
+            $('#calendar').on('viewRender', function() {
+                applyCalendarStyles();
+            });
+            
+            // Make the date column show up when date is changed
+            $('#id_date').change(function() {
+                const newDate = $(this).val();
+                $('#calendar').fullCalendar('gotoDate', newDate);
+                
+                // Update the existing event
+                $('#calendar').fullCalendar('removeEvents');
+                $('#calendar').fullCalendar('addEventSource', [{
+                    title: '{{ form.instance.get_municipality_display }}',
+                    start: newDate
+                }]);
+            });
+            
+            // Apply Lithuanian format for date if needed
+            $('.fc-day-number').each(function() {
+                let dateText = $(this).text();
+                if (dateText && !isNaN(dateText)) {
+                    $(this).text(parseInt(dateText));
+                }
+            });
+            
+            // Set label and placeholder for time checkboxes
+            $('label[for^="id_available_times_"]').css('cursor', 'pointer');
+        });
+    </script>
+    
+    <style>
+        .time-checkboxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        @media (max-width: 576px) {
+            .time-checkboxes {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .time-checkboxes label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background-color: rgba(52, 152, 219, 0.1);
+            transition: background-color 0.2s;
+        }
+        
+        .time-checkboxes label:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+        
+        .time-checkboxes input[type="checkbox"] {
+            margin-right: 8px;
+            min-width: auto;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .existing-clients {
+            margin-top: 25px;
+            background-color: rgba(52, 152, 219, 0.1);
+            border-radius: var(--border-radius);
+            padding: 15px;
+        }
+        
+        .existing-clients h3 {
+            color: var(--accent);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .clients-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .clients-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .clients-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .client-time {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </body>
 </html>

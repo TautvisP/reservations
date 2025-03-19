@@ -1,31 +1,175 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Reservation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <style>
+        .time-checkboxes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .time-checkboxes label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            background-color: rgba(52, 152, 219, 0.1);
+            transition: background-color 0.2s;
+        }
+        
+        .time-checkboxes label:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+        
+        .time-checkboxes input[type="checkbox"] {
+            margin-right: 8px;
+            min-width: auto;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="form-container">
-            <h1>Add Reservation</h1>
-            <form method="post">
+    <header class="page-header">
+        <h1>MANOMEDELYNAS.LT</h1>
+        <a href="{% url 'index' %}" class="back-btn">Grįžti į Kalendorių</a>
+    </header>
+
+    <div class="page-title">
+        <h2>PRIDĖTI NAUJĄ REZERVACIJĄ</h2>
+    </div>
+    
+    <div class="reservation-container">
+        <div class="form-card">
+            <form method="post" class="reservation-form">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Add Reservation</button>
+                <div class="form-fields">
+                    {% for field in form %}
+                        <div class="form-field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            
+                            {% if field.name == 'available_times' %}
+                                <div class="time-checkboxes">
+                                    {% for value, label in field.field.choices %}
+                                        <label for="id_{{ field.name }}_{{ forloop.counter0 }}">
+                                            <input type="checkbox" name="{{ field.name }}" id="id_{{ field.name }}_{{ forloop.counter0 }}" value="{{ value }}"
+                                                {% if value in field.value|default:'' %}checked{% endif %}>
+                                            {{ label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                            
+                            {% if field.help_text %}
+                                <div class="field-help">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="field-errors">
+                                    {% for error in field.errors %}
+                                        <span class="error-message">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-accent">Pridėti Rezervaciją</button>
+                </div>
             </form>
         </div>
-        <div class="calendar-container">
+        
+        <div class="calendar-card">
+            <div class="calendar-heading">
+                <h3>Pasirinkite Datą</h3>
+                <p class="calendar-hint">Paspauskite ant dienos kalendoriuje, kad pamatytumėte galimus laikus.</p>
+            </div>
             <div id="calendar"></div>
         </div>
     </div>
 
+    <footer class="page-footer">
+        <div class="footer-content">
+            <div class="copyright">
+                &copy; {% now "Y" %} MANOMEDELYNAS.LT. 
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="hidden-admin-link">Visos teisės saugomos.</a>
+                {% else %}
+                    <span>Visos teisės saugomos.</span>
+                {% endif %}
+            </div>
+        </div>
+    </footer>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/lt.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
     <script src="{% static 'js/calendar.js' %}"></script>
+    <script>
+        // Customize the calendar for dark theme and Lithuanian language
+        $(document).ready(function() {
+            // Set moment.js locale to Lithuanian
+            moment.locale('lt');
+            
+            // Initialize the calendar with Lithuanian settings
+            $('#calendar').fullCalendar({
+                locale: 'lt',
+                header: {
+                    left: 'prev,next',
+                    center: 'title',
+                    right: 'today'
+                },
+                buttonText: {
+                    today: 'Šiandien',
+                    month: 'Mėnuo',
+                    week: 'Savaitė',
+                    day: 'Diena'
+                },
+                monthNames: ['Sausis', 'Vasaris', 'Kovas', 'Balandis', 'Gegužė', 'Birželis', 'Liepa', 'Rugpjūtis', 'Rugsėjis', 'Spalis', 'Lapkritis', 'Gruodis'],
+                monthNamesShort: ['Sau', 'Vas', 'Kov', 'Bal', 'Geg', 'Bir', 'Lie', 'Rgp', 'Rgs', 'Spa', 'Lap', 'Grd'],
+                dayNames: ['Sekmadienis', 'Pirmadienis', 'Antradienis', 'Trečiadienis', 'Ketvirtadienis', 'Penktadienis', 'Šeštadienis'],
+                dayNamesShort: ['Sek', 'Pir', 'Ant', 'Tre', 'Ket', 'Pen', 'Šeš'],
+                firstDay: 1,  // Monday as first day of week
+                events: function(start, end, timezone, callback) {
+                    // Your events loading code here
+                },
+                dayClick: function(date) {
+                    // Your day click handling code here
+                }
+            });
+            
+            // Apply dark theme styling
+            $('.fc-widget-header').css('background-color', 'var(--primary)');
+            $('.fc-widget-header').css('color', 'var(--text)');
+            $('.fc-widget-content').css('background-color', 'var(--bg-card)');
+            $('.fc-widget-content').css('color', 'var(--text)');
+            $('.fc-button').css({
+                'background-color': 'var(--secondary)',
+                'color': 'var(--text)',
+                'border': 'none',
+                'text-shadow': 'none',
+                'box-shadow': 'none'
+            });
+            $('.fc-button:hover').css('background-color', 'var(--accent)');
+            
+            // Adjust for mobile if needed
+            if (window.innerWidth <= 768) {
+                $('#calendar').fullCalendar('option', 'header', {
+                    left: 'title',
+                    center: '',
+                    right: 'today prev,next'
+                });
+            }
+        });
+    </script>
 </body>
 </html>
