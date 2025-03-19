@@ -63,81 +63,103 @@
     </footer>
 
     <style>
-        .delete-confirmation {
-            text-align: center;
-            padding: 30px 20px;
-        }
-        
-        .warning-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: #e74c3c;
-        }
-        
-        .confirmation-message {
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-        
-        .client-details {
-            background-color: rgba(76, 175, 80, 0.1);
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            text-align: left;
-        }
-        
-        .client-details h3 {
-            margin-top: 0;
-            color: var(--accent);
-            margin-bottom: 15px;
-        }
-        
-        .client-details ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .client-details li {
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .client-details li:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        
+    /* Add these styles to make the footer stick to the bottom */
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+    }
+    
+    .page-header, .page-title {
+        flex-shrink: 0;
+    }
+    
+    .reservation-container {
+        flex: 1 0 auto;
+    }
+    
+    .page-footer {
+        flex-shrink: 0;
+        margin-top: auto;
+    }
+    
+    /* Your existing styles */
+    .delete-confirmation {
+        text-align: center;
+        padding: 30px 20px;
+    }
+    
+    .warning-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: #e74c3c;
+    }
+    
+    .confirmation-message {
+        font-size: 1.1rem;
+        margin-bottom: 25px;
+        line-height: 1.5;
+    }
+    
+    .client-details {
+        background-color: rgba(76, 175, 80, 0.1);
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .client-details h3 {
+        margin-top: 0;
+        color: var(--accent);
+        margin-bottom: 15px;
+    }
+    
+    .client-details ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .client-details li {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .client-details li:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 25px;
+    }
+    
+    .btn-delete {
+        background-color: #e74c3c;
+    }
+    
+    .btn-delete:hover {
+        background-color: #c0392b;
+    }
+    
+    @media (max-width: 768px) {
         .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
+            flex-direction: column;
+            gap: 10px;
         }
         
-        .btn-delete {
-            background-color: #e74c3c;
+        .action-buttons a, 
+        .action-buttons button {
+            width: 100%;
         }
-        
-        .btn-delete:hover {
-            background-color: #c0392b;
-        }
-        
-        @media (max-width: 768px) {
-            .action-buttons {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .action-buttons a, 
-            .action-buttons button {
-                width: 100%;
-            }
-        }
+    }
     </style>
 </body>
 </html>
