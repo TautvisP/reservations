@@ -30,7 +30,17 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+# CSRF settings for Render deployment
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com', 'https://*.manomedelynas.lt']
+
+# Cookie settings for secure deployment
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Make sure these are also set properly
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.onrender.com', '.manomedelynas.lt']
 
 
 # Application definition
