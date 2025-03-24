@@ -88,6 +88,7 @@ class ClientReservationForm(forms.ModelForm):
         help_texts = {
             'trees_under_4m': 'Pažymėkite, jei visi augalai yra žemaūgiai arba vidutinio augumo (iki 3 metrų aukščio)',
             'selected_time': 'Nelikus laisvų laikų, susisieksime',
+            'additional_comments' : 'Dėl daugiau informacijos ir pageidavimų susisiekite tel.  +37066488870'
         }
 
     def __init__(self, *args, **kwargs):
